@@ -1,0 +1,2905 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ingat Buah | Fruit Memory Adventure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Quicksand', 'sans-serif'],
+          },
+          colors: {
+            candyPink: '#FF2E93',
+            popYellow: '#FFDD00',
+            brightBlue: '#00C8FF',
+            brightCyan: '#00F0FF',
+            candyPurple: '#9933FF',
+            brightGreen: '#2EE560',
+            popOrange: '#FF6E00',
+            softPeach: '#FFE8DF',
+            pastelMint: '#DFFCEE',
+            pastelAqua: '#E2F8FF',
+            pastelLilac: '#F0E6FF',
+            toyCard: '#FFF9E8',
+          },
+          boxShadow: {
+            'toy-sm': '0 4px 0 rgba(0,0,0,0.14)',
+            'toy': '0 7px 0 rgba(0,0,0,0.16)',
+            'toy-lg': '0 10px 0 rgba(0,0,0,0.18)',
+            'toy-pressed': '0 2px 0 rgba(0,0,0,0.18)',
+            'glow-cyan': '0 0 25px rgba(0, 240, 255, 0.75)',
+            'glow-pink': '0 0 25px rgba(255, 46, 147, 0.75)',
+            'glow-yellow': '0 0 30px rgba(255, 221, 0, 0.85)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      font-family: 'Quicksand', sans-serif !important;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #A2E9FF;
+    }
+
+    #game-shell {
+      width: 100%;
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #full-screen-background {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .ui-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      pointer-events: auto;
+    }
+
+    .toy-btn {
+      transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform: translateY(0);
+      cursor: pointer;
+    }
+    .toy-btn:hover {
+      transform: translateY(-2px);
+    }
+    .toy-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.18) !important;
+    }
+
+    .puffy-panel {
+      background: radial-gradient(circle at 30% 20%, #FFFFFF, #FFF3D6 85%);
+      border: 4px solid #FFA834;
+      box-shadow: 0 10px 0 #D97A00, 0 16px 25px rgba(0,0,0,0.15);
+      border-radius: 2.2rem;
+    }
+
+    .puffy-card {
+      background: #FFFFFF;
+      border: 3px solid #73D8FF;
+      box-shadow: 0 6px 0 #2896E0, 0 10px 18px rgba(0,0,0,0.08);
+      border-radius: 1.8rem;
+    }
+
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(1deg); }
+    }
+    @keyframes squishyWobble {
+      0%, 100% { transform: scale(1, 1); }
+      30% { transform: scale(1.15, 0.88); }
+      60% { transform: scale(0.92, 1.12); }
+      80% { transform: scale(1.05, 0.96); }
+    }
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-12px) rotate(-4deg); }
+      40% { transform: translateX(12px) rotate(4deg); }
+      60% { transform: translateX(-8px) rotate(-2deg); }
+      80% { transform: translateX(8px) rotate(2deg); }
+    }
+    @keyframes victoryBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      30% { transform: translateY(-26px) scale(1.15) rotate(-3deg); }
+      50% { transform: translateY(0) scale(0.92); }
+      75% { transform: translateY(-12px) scale(1.06) rotate(3deg); }
+    }
+    @keyframes peekIn {
+      0% { opacity: 0; transform: scale(0.4) rotate(-10deg); }
+      70% { transform: scale(1.12) rotate(4deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0); }
+    }
+
+    /* ANIMASI KHAS BUAH BERJALAN SEMBUNYI (WALKING FRUIT) */
+    @keyframes fruitWaddleWalk {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-10px) rotate(-6deg); }
+      50% { transform: translateY(0) rotate(0deg); }
+      75% { transform: translateY(-10px) rotate(6deg); }
+    }
+    @keyframes footStepLeft {
+      0%, 100% { transform: rotate(0deg) translateY(0); }
+      50% { transform: rotate(26deg) translateY(-8px); }
+    }
+    @keyframes footStepRight {
+      0%, 100% { transform: rotate(0deg) translateY(0); }
+      50% { transform: rotate(-26deg) translateY(-8px); }
+    }
+    @keyframes armSwingL {
+      0%, 100% { transform: rotate(-10deg); }
+      50% { transform: rotate(30deg); }
+    }
+    @keyframes armSwingR {
+      0%, 100% { transform: rotate(10deg); }
+      50% { transform: rotate(-30deg); }
+    }
+    @keyframes sparkleTwinkle {
+      0%, 100% { transform: scale(0.6) rotate(0deg); opacity: 0.3; }
+      50% { transform: scale(1.3) rotate(90deg); opacity: 1; }
+    }
+
+    .anim-fruit-walk { animation: fruitWaddleWalk 0.65s ease-in-out infinite; }
+    .anim-foot-left { animation: footStepLeft 0.65s ease-in-out infinite; transform-origin: 35px 78px; }
+    .anim-foot-right { animation: footStepRight 0.65s ease-in-out infinite 0.32s; transform-origin: 65px 78px; }
+    .anim-arm-left { animation: armSwingL 0.65s ease-in-out infinite; transform-origin: 22px 50px; }
+    .anim-arm-right { animation: armSwingR 0.65s ease-in-out infinite; transform-origin: 78px 50px; }
+    .anim-sparkle { animation: sparkleTwinkle 1.1s ease-in-out infinite; }
+
+    .anim-float { animation: gentleFloat 3.8s ease-in-out infinite; }
+    .anim-squishy { animation: squishyWobble 0.6s ease-in-out; }
+    .anim-wrong { animation: wrongShake 0.55s ease-in-out; }
+    .anim-victory { animation: victoryBounce 0.85s ease-in-out; }
+    .anim-pop-in { animation: peekIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #FFEAC2;
+      border-radius: 10px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #FFA000;
+      border-radius: 10px;
+      border: 2px solid #FFF3D6;
+    }
+
+    #drag-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 45;
+    }
+  </style>
+</head>
+<body class="bg-[#78DCFA]">
+  <div id="game-shell">
+    
+    <svg id="full-screen-background" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" width="100%" height="100%" aria-hidden="true">
+      <defs>
+        <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#4BE6FF"/>
+          <stop offset="35%" stop-color="#A5F0FF"/>
+          <stop offset="70%" stop-color="#FFDEEB"/>
+          <stop offset="100%" stop-color="#FFF0A0"/>
+        </linearGradient>
+
+        <linearGradient id="hillGreenGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#9AF856"/>
+          <stop offset="60%" stop-color="#4CE038"/>
+          <stop offset="100%" stop-color="#24B325"/>
+        </linearGradient>
+
+        <linearGradient id="castleWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#FFF7ED"/>
+          <stop offset="45%" stop-color="#FFE0F0"/>
+          <stop offset="100%" stop-color="#FFB3D9"/>
+        </linearGradient>
+
+        <linearGradient id="coneRoofPink" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FF70BD"/>
+          <stop offset="60%" stop-color="#FF2493"/>
+          <stop offset="100%" stop-color="#BA005E"/>
+        </linearGradient>
+
+        <linearGradient id="coneRoofPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#C585FF"/>
+          <stop offset="60%" stop-color="#8C25F7"/>
+          <stop offset="100%" stop-color="#5500A8"/>
+        </linearGradient>
+
+        <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="75%" stop-color="#F2FBFF"/>
+          <stop offset="100%" stop-color="#D7F1FF"/>
+        </linearGradient>
+
+        <linearGradient id="pathGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#FFF3C4"/>
+          <stop offset="50%" stop-color="#FFDE82"/>
+          <stop offset="100%" stop-color="#F5B942"/>
+        </linearGradient>
+
+        <filter id="softToyShadow" x="-10%" y="-10%" width="120%" height="125%">
+          <feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#103F66" flood-opacity="0.18"/>
+        </filter>
+        <filter id="deepToyShadow" x="-15%" y="-15%" width="130%" height="135%">
+          <feDropShadow dx="0" dy="10" stdDeviation="6" flood-color="#0E332E" flood-opacity="0.25"/>
+        </filter>
+      </defs>
+
+      <!-- SKY -->
+      <rect x="0" y="0" width="1440" height="900" fill="url(#skyGrad)"/>
+
+      <!-- SUN TOY WITH ROTATING CANDY RAYS -->
+      <g transform="translate(190, 150)">
+        <g>
+          <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="24s" repeatCount="indefinite"/>
+          <circle cx="0" cy="0" r="70" fill="#FFC800" opacity="0.3"/>
+          <polygon points="0,-95 18,-65 -18,-65" fill="#FFA500"/>
+          <polygon points="95,0 65,18 65,-18" fill="#FFA500"/>
+          <polygon points="0,95 18,65 -18,65" fill="#FFA500"/>
+          <polygon points="-95,0 -65,18 -65,-18" fill="#FFA500"/>
+          <polygon points="67,-67 60,-40 40,-60" fill="#FFA500"/>
+          <polygon points="67,67 60,40 40,60" fill="#FFA500"/>
+          <polygon points="-67,67 -60,40 -40,60" fill="#FFA500"/>
+          <polygon points="-67,-67 -60,-40 -40,-60" fill="#FFA500"/>
+        </g>
+        <circle cx="0" cy="0" r="54" fill="#FFEA2B" stroke="#FFAE00" stroke-width="5" filter="url(#softToyShadow)"/>
+        <ellipse cx="-16" cy="-8" rx="5" ry="8" fill="#5A2E00"/>
+        <ellipse cx="16" cy="-8" rx="5" ry="8" fill="#5A2E00"/>
+        <ellipse cx="-14" cy="-11" rx="2" ry="3" fill="#FFFFFF"/>
+        <ellipse cx="18" cy="-11" rx="2" ry="3" fill="#FFFFFF"/>
+        <circle cx="-22" cy="7" r="7" fill="#FF5EA8" opacity="0.75"/>
+        <circle cx="22" cy="7" r="7" fill="#FF5EA8" opacity="0.75"/>
+        <path d="M -15,10 Q 0,26 15,10" fill="none" stroke="#5A2E00" stroke-width="4" stroke-linecap="round"/>
+      </g>
+
+      <!-- PUFFY CLOUDS (DRIFTING) -->
+      <g filter="url(#softToyShadow)">
+        <g>
+          <animateTransform attributeName="transform" type="translate" values="-180,0; 1550,0" dur="48s" repeatCount="indefinite"/>
+          <g transform="translate(0, 100)">
+            <ellipse cx="100" cy="45" rx="55" ry="35" fill="url(#cloudGrad)"/>
+            <ellipse cx="150" cy="30" rx="65" ry="48" fill="url(#cloudGrad)"/>
+            <ellipse cx="210" cy="42" rx="58" ry="38" fill="url(#cloudGrad)"/>
+            <ellipse cx="150" cy="18" rx="35" ry="16" fill="#FFFFFF"/>
+          </g>
+        </g>
+
+        <g>
+          <animateTransform attributeName="transform" type="translate" values="500,0; 2100,0; -500,0; 500,0" dur="62s" repeatCount="indefinite"/>
+          <g transform="translate(0, 180)">
+            <ellipse cx="80" cy="35" rx="45" ry="28" fill="url(#cloudGrad)"/>
+            <ellipse cx="120" cy="25" rx="50" ry="38" fill="url(#cloudGrad)"/>
+            <ellipse cx="165" cy="35" rx="45" ry="28" fill="url(#cloudGrad)"/>
+          </g>
+        </g>
+      </g>
+
+      <!-- ROLLING CHIBI HILLS -->
+      <path d="M-100,560 Q 250,420 620,530 T 1500,500 L 1500,900 L -100,900 Z" fill="#71DC3B" opacity="0.75"/>
+      <path d="M-50,620 Q 300,480 820,590 T 1600,560 L 1600,900 L -50,900 Z" fill="url(#hillGreenGrad1)"/>
+
+      <!-- CHIBI TOY CASTLE -->
+      <g transform="translate(940, 360)" filter="url(#deepToyShadow)">
+        <rect x="50" y="140" width="220" height="150" rx="28" fill="url(#castleWallGrad)" stroke="#FFA0C5" stroke-width="5"/>
+        <rect x="75" y="170" width="35" height="18" rx="6" fill="#FFAECF"/>
+        <rect x="180" y="170" width="35" height="18" rx="6" fill="#FFAECF"/>
+        <rect x="130" y="215" width="40" height="18" rx="6" fill="#FFAECF"/>
+        
+        <rect x="30" y="80" width="65" height="190" rx="20" fill="url(#castleWallGrad)" stroke="#FFA0C5" stroke-width="4"/>
+        <polygon points="15,85 62,-15 110,85" fill="url(#coneRoofPink)" stroke="#BA005E" stroke-width="4"/>
+        <circle cx="62.5" cy="-18" r="11" fill="#FFDE00" stroke="#E69500" stroke-width="3"/>
+        <rect x="48" y="120" width="28" height="38" rx="14" fill="#693077"/>
+        
+        <rect x="225" y="80" width="65" height="190" rx="20" fill="url(#castleWallGrad)" stroke="#FFA0C5" stroke-width="4"/>
+        <polygon points="210,85 257.5,-15 305,85" fill="url(#coneRoofPurple)" stroke="#4A0587" stroke-width="4"/>
+        <circle cx="257.5" cy="-18" r="11" fill="#00E5FF" stroke="#009BB5" stroke-width="3"/>
+        <rect x="244" y="120" width="28" height="38" rx="14" fill="#693077"/>
+
+        <rect x="110" y="45" width="100" height="140" rx="18" fill="#FFF3F8" stroke="#FFA0C5" stroke-width="4"/>
+        <polygon points="90,50 160,-55 230,50" fill="url(#coneRoofPink)" stroke="#BA005E" stroke-width="4"/>
+        <path d="M 130,290 L 130,225 C 130,205 190,205 190,225 L 190,290 Z" fill="#653517" stroke="#41200A" stroke-width="4"/>
+        <circle cx="145" cy="245" r="4.5" fill="#FFDE00"/>
+        <line x1="160" y1="-55" x2="160" y2="-95" stroke="#FFAE00" stroke-width="4"/>
+        <path d="M 160,-95 Q 185,-85 200,-95 Q 185,-65 160,-75 Z" fill="#FF0077">
+          <animate attributeName="d" values="M 160,-95 Q 185,-85 200,-95 Q 185,-65 160,-75 Z; M 160,-95 Q 185,-105 200,-95 Q 185,-85 160,-75 Z; M 160,-95 Q 185,-85 200,-95 Q 185,-65 160,-75 Z" dur="2.2s" repeatCount="indefinite"/>
+        </path>
+      </g>
+
+      <!-- GIANT MEMORY TREE -->
+      <g transform="translate(180, 390)" filter="url(#deepToyShadow)">
+        <path d="M 110,360 C 95,290 85,220 120,160 C 150,220 145,290 130,360 Z" fill="#884C1C" stroke="#5A2C08" stroke-width="6"/>
+        <ellipse cx="60" cy="120" rx="90" ry="75" fill="#36DD58"/>
+        <ellipse cx="180" cy="115" rx="95" ry="80" fill="#20C440"/>
+        <ellipse cx="120" cy="60" rx="115" ry="90" fill="#46EE68"/>
+        <ellipse cx="120" cy="40" rx="80" ry="45" fill="#88FF9A"/>
+      </g>
+
+      <!-- WINDING TOY PATHWAY -->
+      <path d="M 120,900 C 260,780 430,730 650,710 C 880,690 980,670 1060,650 C 1140,630 1190,620 1260,610" 
+            fill="none" stroke="url(#pathGrad)" stroke-width="110" stroke-linecap="round" filter="url(#softToyShadow)"/>
+      <path d="M 120,900 C 260,780 430,730 650,710 C 880,690 980,670 1060,650 C 1140,630 1190,620 1260,610" 
+            fill="none" stroke="#FFE9A3" stroke-width="85" stroke-linecap="round"/>
+
+      <ellipse cx="320" cy="790" rx="35" ry="20" fill="#FFFBEB" stroke="#F5C04A" stroke-width="4"/>
+      <ellipse cx="500" cy="740" rx="32" ry="18" fill="#FFFBEB" stroke="#F5C04A" stroke-width="4"/>
+      <ellipse cx="720" cy="705" rx="28" ry="16" fill="#FFFBEB" stroke="#F5C04A" stroke-width="4"/>
+      <ellipse cx="910" cy="675" rx="26" ry="14" fill="#FFFBEB" stroke="#F5C04A" stroke-width="4"/>
+    </svg>
+
+    <svg id="drag-overlay" aria-hidden="true">
+      <defs>
+        <linearGradient id="dragLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FF2E93"/>
+          <stop offset="50%" stop-color="#FFDD00"/>
+          <stop offset="100%" stop-color="#00F0FF"/>
+        </linearGradient>
+      </defs>
+      <path id="active-drag-line" d="" fill="none" stroke="url(#dragLineGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="16, 10" opacity="0.95"/>
+      <path id="permanent-drag-line" d="" fill="none" stroke="#2EE560" stroke-width="14" stroke-linecap="round" filter="drop-shadow(0px 4px 6px rgba(0,0,0,0.3))"/>
+    </svg>
+
+    <main id="ui-container" class="ui-layer" role="main">
+      
+      <!-- TOP STATUS BAR -->
+      <header class="w-full px-3 py-2 sm:px-6 sm:py-3 flex items-center justify-between pointer-events-auto">
+        <div class="flex items-center gap-2">
+          <button id="btn-header-back" class="hidden toy-btn px-3 py-1.5 sm:px-3 sm:py-2 bg-white/90 border-3 border-[#FFA000] text-amber-900 rounded-2xl font-bold text-xs sm:text-base flex items-center gap-1.5 shadow-toy-sm" aria-label="Menu">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-700" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <span id="txt-header-back">Menu</span>
+          </button>
+          <div id="badge-title" class="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-2xl border-3 border-amber-300 shadow-toy-sm">
+            <span class="w-3 h-3 rounded-full bg-pink-500 animate-ping"></span>
+            <h1 class="text-xs sm:text-lg font-extrabold text-amber-950 tracking-tight" id="app-heading">Ingat Buah</h1>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="btn-toggle-voice" class="toy-btn px-2.5 py-1 sm:px-2.5 sm:py-1.5 bg-amber-100 hover:bg-amber-200 border-2 border-amber-400 rounded-xl shadow-toy-sm flex items-center gap-1 text-[11px] sm:text-xs font-bold text-amber-900" title="Suara / Voice">
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-700" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            <span id="voice-indicator-txt">Suara: ON</span>
+          </button>
+
+          <div class="bg-white/95 rounded-2xl p-0.5 sm:p-1 border-2 border-amber-400 shadow-toy-sm flex items-center">
+            <button id="btn-lang-ms" class="px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-extrabold rounded-xl transition-colors bg-pink-500 text-white shadow-sm" aria-label="Tukar ke Bahasa Melayu">BM</button>
+            <button id="btn-lang-en" class="px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-extrabold rounded-xl transition-colors text-amber-900 hover:bg-amber-100" aria-label="Switch to English">EN</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEWPORT CONTENT CONTAINER -->
+      <section id="view-router" class="flex-1 w-full max-w-5xl mx-auto px-3 py-1 sm:px-6 flex flex-col items-center justify-center relative overflow-y-auto custom-scroll">
+        
+        <!-- VIEW 1: HOME -->
+        <div id="screen-home" class="w-full flex flex-col items-center justify-center my-auto py-2">
+          <div class="relative w-44 h-44 sm:w-56 sm:h-56 mb-1 anim-float flex items-center justify-center">
+            <div id="mascot-home-wrap" class="w-full h-full cursor-pointer" title="Puffi si Buah Comel!"></div>
+          </div>
+
+          <div class="text-center mb-4 sm:mb-6">
+            <div class="inline-block bg-gradient-to-r from-pink-500 via-yellow-400 to-cyan-400 p-1.5 rounded-3xl shadow-toy-lg">
+              <div class="bg-white px-6 py-2.5 sm:px-10 sm:py-3 rounded-[1.3rem]">
+                <h2 id="home-title" class="text-3xl sm:text-5xl font-extrabold text-pink-600 tracking-tight drop-shadow-sm">Ingat Buah</h2>
+                <p id="home-subtitle" class="text-xs sm:text-base font-bold text-amber-800 mt-1">Jom lihat, ingat dan cari buah!</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full max-w-sm sm:max-w-md grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 px-3">
+            <button id="btn-nav-play" class="toy-btn sm:col-span-2 py-3.5 sm:py-4 px-6 bg-gradient-to-r from-green-400 to-emerald-500 border-4 border-emerald-600 text-white font-extrabold text-lg sm:text-2xl rounded-2xl shadow-toy-lg flex items-center justify-center gap-3">
+              <svg class="w-7 h-7 text-yellow-200 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <span id="lbl-nav-play">Mula Main</span>
+            </button>
+
+            <button id="btn-nav-how" class="toy-btn py-3 px-4 bg-yellow-300 hover:bg-yellow-400 border-3 border-amber-600 text-amber-950 font-bold text-sm sm:text-base rounded-2xl shadow-toy flex items-center justify-center gap-2">
+              <svg class="w-5 h-5 text-amber-800" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+              <span id="lbl-nav-how">Cara Main</span>
+            </button>
+
+            <button id="btn-nav-collection" class="toy-btn py-3 px-4 bg-pink-400 hover:bg-pink-500 border-3 border-pink-700 text-white font-bold text-sm sm:text-base rounded-2xl shadow-toy flex items-center justify-center gap-2">
+              <svg class="w-5 h-5 text-pink-100" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
+              <span id="lbl-nav-collection">Koleksi</span>
+            </button>
+
+            <button id="btn-nav-profile" class="toy-btn sm:col-span-2 py-2.5 px-4 bg-cyan-400 hover:cyan-500 border-3 border-cyan-700 text-white font-bold text-sm sm:text-base rounded-2xl shadow-toy flex items-center justify-center gap-2">
+              <svg class="w-5 h-5 text-cyan-100" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              <span id="lbl-nav-profile">Profil Pemain</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW 2: SESSION & DIFFICULTY SELECTION -->
+        <div id="screen-setup" class="hidden w-full max-w-lg mx-auto my-auto flex flex-col items-center">
+          <div class="puffy-panel w-full p-4 sm:p-6 text-center">
+            
+            <div id="setup-step-session">
+              <h3 id="lbl-choose-session" class="text-xl sm:text-2xl font-black text-amber-950 mb-3">Pilih Permainan</h3>
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <button class="toy-btn btn-session-choice py-3 px-3 rounded-2xl bg-amber-100 hover:bg-amber-200 border-3 border-amber-400 font-extrabold text-amber-900 text-sm sm:text-base shadow-toy" data-questions="5">
+                  5 <span class="txt-q-unit">Soalan</span>
+                </button>
+                <button class="toy-btn btn-session-choice py-3 px-3 rounded-2xl bg-amber-100 hover:bg-amber-200 border-3 border-amber-400 font-extrabold text-amber-900 text-sm sm:text-base shadow-toy" data-questions="10">
+                  10 <span class="txt-q-unit">Soalan</span>
+                </button>
+                <button class="toy-btn btn-session-choice py-3 px-3 rounded-2xl bg-amber-100 hover:bg-amber-200 border-3 border-amber-400 font-extrabold text-amber-900 text-sm sm:text-base shadow-toy" data-questions="15">
+                  15 <span class="txt-q-unit">Soalan</span>
+                </button>
+                <button class="toy-btn btn-session-choice py-3 px-3 rounded-2xl bg-purple-100 hover:bg-purple-200 border-3 border-purple-400 font-extrabold text-purple-900 text-sm sm:text-base shadow-toy" data-questions="0">
+                  <span id="lbl-free-play">Main Bebas</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="setup-step-diff" class="mt-4 pt-4 border-t-2 border-amber-200">
+              <h3 id="lbl-choose-diff" class="text-xl sm:text-2xl font-black text-amber-950 mb-3">Pilih Tahap</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button class="toy-btn btn-diff-choice flex flex-col items-center justify-between p-3 rounded-2xl bg-emerald-100 hover:bg-emerald-200 border-3 border-emerald-500 shadow-toy" data-diff="easy">
+                  <span class="font-extrabold text-emerald-900 text-base" id="diff-opt-easy-title">Mudah</span>
+                  <div class="w-12 h-12 my-2 flex items-center justify-center" id="preview-easy-fruit"></div>
+                  <span class="text-xs font-bold text-emerald-800" id="diff-opt-easy-sub">Ingat 1 buah</span>
+                </button>
+
+                <button class="toy-btn btn-diff-choice flex flex-col items-center justify-between p-3 rounded-2xl bg-yellow-100 hover:bg-yellow-200 border-3 border-yellow-500 shadow-toy" data-diff="medium">
+                  <span class="font-extrabold text-amber-900 text-base" id="diff-opt-med-title">Sederhana</span>
+                  <div class="flex items-center justify-center gap-1 my-2" id="preview-med-fruits"></div>
+                  <span class="text-xs font-bold text-amber-800" id="diff-opt-med-sub">Ingat 2 buah</span>
+                </button>
+
+                <button class="toy-btn btn-diff-choice flex flex-col items-center justify-between p-3 rounded-2xl bg-purple-100 hover:bg-purple-200 border-3 border-purple-500 shadow-toy" data-diff="pro">
+                  <span class="font-extrabold text-purple-900 text-base" id="diff-opt-pro-title">Pro</span>
+                  <div class="flex items-center justify-center gap-0.5 my-2" id="preview-pro-fruits"></div>
+                  <span class="text-xs font-bold text-purple-800" id="diff-opt-pro-sub">Ingat 3 buah</span>
+                </button>
+              </div>
+            </div>
+
+            <button id="btn-cancel-setup" class="toy-btn mt-5 px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded-xl font-bold text-gray-700 text-sm">
+              <span id="lbl-cancel">Batal</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW 3: GAMEPLAY ARENA -->
+        <div id="screen-game" class="hidden w-full flex-1 flex flex-col justify-between py-1 relative">
+          
+          <!-- Top HUD Banner -->
+          <div class="w-full flex items-center justify-between px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-2xl border-3 border-amber-300 shadow-toy-sm mb-1">
+            <div class="flex items-center gap-2">
+              <span id="game-hud-diff" class="px-3 py-0.5 bg-pink-500 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-sm">Mudah</span>
+              <span id="game-hud-progress" class="text-xs sm:text-sm font-extrabold text-amber-950">1 / 5</span>
+            </div>
+
+            <div class="flex items-center gap-1.5 bg-amber-100/90 px-3 py-1 rounded-xl border-2 border-amber-400">
+              <svg class="w-4 h-4 text-amber-600 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              <span id="game-hud-score" class="font-extrabold text-amber-950 text-sm sm:text-base">0</span>
+            </div>
+          </div>
+
+          <!-- Instruction Pill -->
+          <div class="w-full text-center px-2 py-1 min-h-[42px] flex items-center justify-center">
+            <div id="instruction-pill" class="inline-flex items-center gap-2 bg-white/95 px-5 py-1.5 rounded-full border-3 border-pink-400 shadow-toy">
+              <span id="instruction-icon" class="w-3.5 h-3.5 rounded-full bg-pink-500 animate-pulse"></span>
+              <span id="instruction-text" class="text-xs sm:text-base font-black text-pink-700">Lihat dan ingat!</span>
+            </div>
+          </div>
+
+          <!-- Center Stage Container -->
+          <div class="flex-1 w-full flex flex-col items-center justify-center relative min-h-[250px] my-1">
+            
+            <!-- STAGE 1: LOOK / REMEMBER CARD -->
+            <div id="stage-look" class="w-full max-w-md flex flex-col items-center justify-center p-2">
+              <div class="puffy-card w-full py-5 px-4 flex flex-col items-center justify-center bg-white/95 relative overflow-hidden border-4 border-cyan-400 shadow-toy-lg">
+                <div class="absolute -top-6 -right-6 w-20 h-20 bg-yellow-200/40 rounded-full blur-md"></div>
+                <div id="target-fruits-box" class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 my-2 min-h-[130px]"></div>
+                <div class="w-48 sm:w-64 h-3.5 bg-amber-100 rounded-full overflow-hidden border-2 border-amber-300 mt-2">
+                  <div id="remember-timer-bar" class="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-100 w-full"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- STAGE 2: HIDE TRANSITION WITH ANIMATED WALKING FRUIT! -->
+            <div id="stage-hide" class="hidden w-full max-w-sm flex flex-col items-center justify-center px-3 anim-pop-in">
+              <div class="w-full bg-white/95 backdrop-blur-md rounded-3xl border-4 border-pink-400 shadow-toy-lg p-5 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                
+                <!-- Sparkling Backdrop Badges -->
+                <div class="absolute -top-3 -left-3 w-10 h-10 bg-yellow-300/40 rounded-full blur-xs"></div>
+                <div class="absolute -bottom-3 -right-3 w-12 h-12 bg-pink-300/40 rounded-full blur-xs"></div>
+
+                <!-- Animated Walking Fruit Character -->
+                <div class="relative w-36 h-36 flex items-center justify-center my-1" id="walking-fruit-box">
+                  <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                    <defs>
+                      <radialGradient id="walkFruitBody" cx="38%" cy="35%" r="65%">
+                        <stop offset="0%" stop-color="#FF5C8A"/>
+                        <stop offset="45%" stop-color="#FF1E56"/>
+                        <stop offset="100%" stop-color="#BD0036"/>
+                      </radialGradient>
+                      <linearGradient id="walkShoeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FFE033"/>
+                        <stop offset="100%" stop-color="#FF9500"/>
+                      </linearGradient>
+                    </defs>
+
+                    <!-- Puffs & Sparkles behind -->
+                    <g fill="#FFD700" class="anim-sparkle">
+                      <polygon points="15,45 18,50 24,50 19,54 21,60 15,56 9,60 11,54 6,50 12,50"/>
+                      <polygon points="85,32 87,36 92,36 88,39 90,44 85,41 80,44 82,39 78,36 83,36"/>
+                    </g>
+                    <g fill="#A5F0FF" class="anim-sparkle" style="animation-delay: 0.4s;">
+                      <circle cx="20" cy="70" r="4"/>
+                      <circle cx="82" cy="65" r="3.5"/>
+                    </g>
+
+                    <!-- Walking Shadow -->
+                    <ellipse cx="50" cy="94" rx="28" ry="5" fill="#000" opacity="0.16"/>
+
+                    <!-- Left Arm swinging -->
+                    <g class="anim-arm-left">
+                      <ellipse cx="18" cy="54" rx="6" ry="11" fill="#FF8FB1" stroke="#BD0036" stroke-width="2.5" transform="rotate(20 18 54)"/>
+                      <circle cx="16" cy="63" r="5" fill="#FFFFFF" stroke="#BD0036" stroke-width="2"/>
+                    </g>
+
+                    <!-- Left Foot (Walking Sneaker) -->
+                    <g class="anim-foot-left">
+                      <rect x="30" y="74" width="7" height="12" rx="3" fill="#FFFFFF" stroke="#BD0036" stroke-width="2"/>
+                      <ellipse cx="32" cy="88" rx="9" ry="5.5" fill="url(#walkShoeGrad)" stroke="#B35900" stroke-width="2.2"/>
+                      <ellipse cx="33" cy="86" rx="4" ry="2" fill="#FFFFFF" opacity="0.8"/>
+                    </g>
+
+                    <!-- Right Foot (Walking Sneaker) -->
+                    <g class="anim-foot-right">
+                      <rect x="63" y="74" width="7" height="12" rx="3" fill="#FFFFFF" stroke="#BD0036" stroke-width="2"/>
+                      <ellipse cx="65" cy="88" rx="9" ry="5.5" fill="url(#walkShoeGrad)" stroke="#B35900" stroke-width="2.2"/>
+                      <ellipse cx="66" cy="86" rx="4" ry="2" fill="#FFFFFF" opacity="0.8"/>
+                    </g>
+
+                    <!-- Main Fruit Body (Bouncing/Waddling) -->
+                    <g class="anim-fruit-walk">
+                      <!-- Leaf Stem -->
+                      <path d="M 50,22 Q 52,10 62,8" fill="none" stroke="#52310C" stroke-width="4.5" stroke-linecap="round"/>
+                      <ellipse cx="64" cy="14" rx="8" ry="4.5" fill="#39E058" stroke="#1D8A33" stroke-width="2" transform="rotate(-15 64 14)"/>
+
+                      <!-- Chubby Plump Fruit -->
+                      <path d="M 50,24 C 32,15 15,30 18,54 C 20,74 36,80 50,76 C 64,80 80,74 82,54 C 85,30 68,15 50,24 Z" 
+                            fill="url(#walkFruitBody)" stroke="#990029" stroke-width="3.5" stroke-linejoin="round"/>
+
+                      <!-- Cute Glossy Light Highlight -->
+                      <ellipse cx="32" cy="38" rx="7" ry="13" fill="#FFFFFF" opacity="0.75" transform="rotate(-20 32 38)"/>
+                      <circle cx="28" cy="56" r="2.5" fill="#FFFFFF" opacity="0.85"/>
+
+                      <!-- Adorable Eyes Looking Aside Playfully -->
+                      <ellipse cx="40" cy="46" rx="5.5" ry="7.5" fill="#2B1000"/>
+                      <circle cx="42" cy="43" r="2.5" fill="#FFFFFF"/>
+                      <ellipse cx="60" cy="46" rx="5.5" ry="7.5" fill="#2B1000"/>
+                      <circle cx="62" cy="43" r="2.5" fill="#FFFFFF"/>
+
+                      <!-- Rosy Blushing Cheeks -->
+                      <circle cx="30" cy="54" r="5" fill="#FFA5BE" opacity="0.9"/>
+                      <circle cx="70" cy="54" r="5" fill="#FFA5BE" opacity="0.9"/>
+
+                      <!-- Happy Open Mouth -->
+                      <path d="M 44,54 Q 50,63 56,54 Z" fill="#4A0515" stroke="#4A0515" stroke-width="1.5"/>
+                      <ellipse cx="50" cy="58" rx="3.5" ry="2" fill="#FF7096"/>
+                    </g>
+
+                    <!-- Right Arm swinging -->
+                    <g class="anim-arm-right">
+                      <ellipse cx="82" cy="54" rx="6" ry="11" fill="#FF8FB1" stroke="#BD0036" stroke-width="2.5" transform="rotate(-20 82 54)"/>
+                      <circle cx="84" cy="63" r="5" fill="#FFFFFF" stroke="#BD0036" stroke-width="2"/>
+                    </g>
+                  </svg>
+                </div>
+
+                <!-- Clean Playful Message Banner -->
+                <div class="mt-3 px-4 py-2 bg-gradient-to-r from-pink-500 to-amber-500 rounded-2xl shadow-toy-sm">
+                  <span id="txt-hiding-message" class="text-sm sm:text-base font-black text-white tracking-wide drop-shadow-sm">Sedia... cari sekarang!</span>
+                </div>
+                <p id="txt-hiding-sub" class="text-xs font-bold text-amber-800 mt-1.5">Buah sedang bersembunyi...</p>
+
+              </div>
+            </div>
+
+            <!-- STAGE 3A: FIND SELECTION CHOICES -->
+            <div id="stage-find" class="hidden w-full max-w-xl flex flex-col items-center justify-center">
+              <div id="answer-tray-container" class="hidden mb-3 bg-white/90 px-4 py-2 rounded-2xl border-3 border-amber-400 shadow-toy flex items-center gap-3">
+                <span id="txt-tray-label" class="text-xs font-bold text-amber-800">Pilihan:</span>
+                <div id="answer-tray-slots" class="flex items-center gap-2"></div>
+              </div>
+              <div id="find-choices-grid" class="w-full grid grid-cols-3 sm:grid-cols-3 gap-3 sm:gap-4 px-2"></div>
+            </div>
+
+            <!-- STAGE 3B: DRAG-TO-CONNECT VARIATION (EASY ONLY) -->
+            <div id="stage-drag" class="hidden w-full max-w-lg flex flex-col items-center justify-center px-3">
+              <div class="w-full flex items-center justify-between gap-4 py-3">
+                <div class="flex-1 flex flex-col items-center">
+                  <span id="txt-drag-left-lbl" class="text-xs font-black text-amber-900 mb-2">Buah apa tadi?</span>
+                  <div id="drag-source-node" class="w-24 h-24 sm:w-32 sm:h-32 puffy-card bg-gradient-to-b from-yellow-100 to-amber-100 border-4 border-amber-400 shadow-toy flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none">
+                    <span class="text-3xl sm:text-4xl font-black text-amber-600">?</span>
+                    <span class="text-[10px] sm:text-xs font-bold text-amber-800 mt-1" id="lbl-drag-source-sub">Tarik dari sini</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-col items-center justify-center opacity-70">
+                  <svg class="w-7 h-7 text-pink-600 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+                </div>
+
+                <div id="drag-target-column" class="flex-1 flex flex-col gap-2.5 items-center"></div>
+              </div>
+              <p id="txt-drag-fallback-hint" class="text-xs text-amber-800 font-bold mt-1 text-center">Boleh seret garisan atau terus tekan buah jawapan!</p>
+            </div>
+
+          </div>
+
+          <!-- Bottom Mascot Reaction Bar -->
+          <div class="w-full flex items-center justify-center py-1">
+            <div class="max-w-md w-full mx-auto flex items-center gap-3 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full border-2 border-amber-300 shadow-toy-sm">
+              <div id="mascot-mini-anchor" class="w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0 flex items-center justify-center"></div>
+              <span id="mascot-mini-speech" class="flex-1 text-xs sm:text-sm font-bold text-amber-950 truncate">Ingat baik-baik ya!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 4: RESULTS SCREEN -->
+        <div id="screen-result" class="hidden w-full max-w-md mx-auto my-auto flex flex-col items-center">
+          <div class="puffy-panel w-full p-6 text-center anim-victory">
+            <div id="mascot-result-wrap" class="w-32 h-32 mx-auto mb-2"></div>
+            <h3 id="res-heading" class="text-2xl sm:text-4xl font-extrabold text-pink-600">Hebat!</h3>
+            <p id="res-subheading" class="text-sm sm:text-base font-bold text-amber-800 mb-4">Permainan Selesai!</p>
+
+            <div class="grid grid-cols-3 gap-2.5 mb-5 bg-amber-50 p-3 rounded-2xl border-2 border-amber-300">
+              <div class="flex flex-col items-center">
+                <span id="lbl-res-score" class="text-[11px] font-bold text-amber-800">Skor</span>
+                <span id="val-res-score" class="text-xl sm:text-2xl font-black text-pink-600">5</span>
+              </div>
+              <div class="flex flex-col items-center border-x-2 border-amber-200 px-1">
+                <span id="lbl-res-correct" class="text-[11px] font-bold text-amber-800">Jawapan Betul</span>
+                <span id="val-res-correct" class="text-xl sm:text-2xl font-black text-emerald-600">5</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <span id="lbl-res-acc" class="text-[11px] font-bold text-amber-800">Ketepatan</span>
+                <span id="val-res-acc" class="text-xl sm:text-2xl font-black text-purple-600">100%</span>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button id="btn-res-playagain" class="toy-btn flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-base rounded-2xl shadow-toy border-3 border-emerald-700">
+                <span id="lbl-res-playagain">Main Lagi</span>
+              </button>
+              <button id="btn-res-menu" class="toy-btn flex-1 py-3 px-4 bg-yellow-400 hover:bg-yellow-500 text-amber-950 font-black text-base rounded-2xl shadow-toy border-3 border-amber-600">
+                <span id="lbl-res-menu">Kembali ke Menu</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 5: HOW TO PLAY MODAL / VIEW -->
+        <div id="screen-how" class="hidden w-full max-w-lg mx-auto my-auto flex flex-col items-center">
+          <div class="puffy-panel w-full p-5 sm:p-6 text-center">
+            <h3 id="lbl-how-title" class="text-2xl font-black text-pink-600 mb-1">Cara Main</h3>
+            <p id="lbl-how-desc" class="text-xs sm:text-sm font-bold text-amber-800 mb-4">Lihat buah, ingat buah, kemudian cari buah yang sama!</p>
+
+            <div class="w-full bg-white/95 rounded-2xl border-3 border-amber-300 p-4 mb-4 shadow-inner flex flex-col items-center gap-3">
+              <div class="w-full grid grid-cols-4 gap-1 items-center">
+                <div class="flex flex-col items-center">
+                  <div class="w-12 h-12 rounded-xl bg-pink-100 border-2 border-pink-400 flex items-center justify-center p-1" id="how-step1-icon"></div>
+                  <span class="text-[11px] font-black text-pink-700 mt-1" id="how-step1-lbl">1. LIHAT</span>
+                </div>
+                <svg class="w-5 h-5 text-amber-500 mx-auto" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+                <div class="flex flex-col items-center">
+                  <div class="w-12 h-12 rounded-xl bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center p-1" id="how-step2-icon"></div>
+                  <span class="text-[11px] font-black text-yellow-800 mt-1" id="how-step2-lbl">2. INGAT</span>
+                </div>
+                <svg class="w-5 h-5 text-amber-500 mx-auto" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+                <div class="flex flex-col items-center">
+                  <div class="w-12 h-12 rounded-xl bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center p-1" id="how-step3-icon"></div>
+                  <span class="text-[11px] font-black text-emerald-800 mt-1" id="how-step3-lbl">3. CARI</span>
+                </div>
+              </div>
+              <p class="text-xs text-amber-900 font-semibold" id="how-reminder">Tiada kad tebalik! Hanya ingat dan sentuh buah yang betul.</p>
+            </div>
+
+            <button id="btn-close-how" class="toy-btn px-8 py-3 bg-pink-500 hover:bg-pink-600 text-white font-extrabold text-base rounded-2xl shadow-toy border-3 border-pink-700">
+              <span id="lbl-how-ok">Faham! Jom Main</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW 6: COLLECTION -->
+        <div id="screen-collection" class="hidden w-full flex-1 flex flex-col py-2 max-w-4xl">
+          <div class="w-full flex items-center justify-between mb-3 bg-white/90 backdrop-blur-sm px-4 py-2.5 rounded-2xl border-3 border-amber-300 shadow-toy-sm">
+            <div>
+              <h3 id="lbl-collection-title" class="text-xl sm:text-2xl font-black text-pink-600">Koleksi Buah</h3>
+              <p id="lbl-collection-sub" class="text-xs font-bold text-amber-800">Semua kawan buah di Chibi Toyland</p>
+            </div>
+            <button id="btn-close-collection" class="toy-btn px-4 py-1.5 bg-yellow-400 border-2 border-amber-500 rounded-xl font-bold text-xs sm:text-sm text-amber-950 shadow-toy-sm">
+              <span id="lbl-collection-back">Tutup</span>
+            </button>
+          </div>
+
+          <div id="collection-grid" class="flex-1 overflow-y-auto custom-scroll grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 p-1"></div>
+        </div>
+
+        <!-- VIEW 7: PLAYER PROFILE -->
+        <div id="screen-profile" class="hidden w-full max-w-xl mx-auto my-auto flex flex-col py-2">
+          <div class="puffy-panel w-full p-4 sm:p-6">
+            <div class="flex items-center justify-between mb-3">
+              <h3 id="lbl-profile-title" class="text-xl sm:text-2xl font-black text-pink-600">Profil Pemain</h3>
+              <button id="btn-close-profile" class="toy-btn px-3 py-1 bg-yellow-400 border-2 border-amber-500 rounded-xl text-xs font-bold text-amber-950">
+                <span id="lbl-profile-back">Tutup</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div>
+                <label id="lbl-player-name" class="block text-xs font-extrabold text-amber-900 mb-1">Nama Pemain</label>
+                <input id="input-player-name" type="text" placeholder="" maxlength="20" class="w-full px-3 py-2 bg-white rounded-xl border-2 border-amber-300 font-bold text-sm text-amber-950 focus:outline-none focus:border-pink-500 shadow-inner">
+              </div>
+
+              <div>
+                <label id="lbl-family-code" class="block text-xs font-extrabold text-amber-900 mb-1">Kod Keluarga</label>
+                <input id="input-family-code" type="text" placeholder="" maxlength="16" class="w-full px-3 py-2 bg-white rounded-xl border-2 border-amber-300 font-bold text-sm text-amber-950 focus:outline-none focus:border-pink-500 shadow-inner">
+              </div>
+            </div>
+
+            <div class="flex justify-end mb-3">
+              <button id="btn-save-profile" class="toy-btn px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-toy-sm border-2 border-emerald-700">
+                <span id="lbl-save-profile">Simpan Profil</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-4 gap-2 mb-4 bg-amber-50/80 p-3 rounded-2xl border-2 border-amber-200 text-center">
+              <div>
+                <span id="lbl-prof-games" class="text-[10px] font-bold text-amber-700 block">Permainan</span>
+                <span id="stat-prof-games" class="text-sm sm:text-base font-black text-amber-950">0</span>
+              </div>
+              <div>
+                <span id="lbl-prof-questions" class="text-[10px] font-bold text-amber-700 block">Soalan</span>
+                <span id="stat-prof-questions" class="text-sm sm:text-base font-black text-amber-950">0</span>
+              </div>
+              <div>
+                <span id="lbl-prof-correct" class="text-[10px] font-bold text-amber-700 block">Betul</span>
+                <span id="stat-prof-correct" class="text-sm sm:text-base font-black text-emerald-600">0</span>
+              </div>
+              <div>
+                <span id="lbl-prof-acc" class="text-[10px] font-bold text-amber-700 block">Ketepatan</span>
+                <span id="stat-prof-acc" class="text-sm sm:text-base font-black text-purple-600">0%</span>
+              </div>
+            </div>
+
+            <div>
+              <h4 id="lbl-history-title" class="text-xs font-extrabold text-amber-900 mb-2">Sejarah Keluarga</h4>
+              <div id="history-log-list" class="max-h-36 overflow-y-auto custom-scroll space-y-1.5 p-1 bg-white/70 rounded-xl border border-amber-200 text-xs">
+                <p id="lbl-history-empty" class="text-center py-4 text-amber-600 italic">Belum ada rekod permainan.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- MANDATORY UNCHANGED FOOTER -->
+      <footer class="w-full text-center py-2 px-4 pointer-events-auto bg-white/50 backdrop-blur-xs">
+        <p class="text-[11px] sm:text-xs font-bold text-amber-950 tracking-wider">Kinder Klub | All Rights Reserved</p>
+      </footer>
+    </main>
+
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'kinderKlub_ingatBuah_playerProfile';
+
+    const state = {
+      lang: 'ms',
+      voiceEnabled: true,
+      currentView: 'home',
+      sessionTotalQuestions: 5,
+      difficulty: 'easy',
+      
+      questionIndex: 0,
+      score: 0,
+      correctAnswers: 0,
+      questionsAnswered: 0,
+      activeTask: null,
+      sessionTasksHistory: [],
+      
+      selectedAnswers: [],
+      
+      isDragging: false,
+      dragStartPoint: null,
+      dragTargetElement: null,
+
+      profile: {
+        playerName: '',
+        familyCode: '',
+        gamesPlayed: 0,
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        bestScore: 0,
+        history: []
+      }
+    };
+
+    const i18n = {
+      ms: {
+        appTitle: 'Ingat Buah',
+        homeSubtitle: 'Jom lihat, ingat dan cari buah!',
+        btnPlay: 'Mula Main',
+        btnHow: 'Cara Main',
+        btnCollection: 'Koleksi',
+        btnProfile: 'Profil Pemain',
+        btnMenu: 'Menu',
+        voiceOn: 'Suara: ON',
+        voiceOff: 'Suara: OFF',
+        chooseSession: 'Pilih Permainan',
+        qUnit: 'Soalan',
+        freePlay: 'Main Bebas',
+        chooseDiff: 'Pilih Tahap',
+        easyTitle: 'Mudah',
+        easySub: 'Ingat 1 buah',
+        medTitle: 'Sederhana',
+        medSub: 'Ingat 2 buah',
+        proTitle: 'Pro',
+        proSub: 'Ingat 3 buah',
+        cancel: 'Batal',
+        instructionLook: 'Lihat dan ingat buah ini!',
+        instructionHiding: 'Sedia... cari sekarang!',
+        hidingSub: 'Buah sedang bersembunyi...',
+        instructionFindOne: 'Cari buah yang kamu ingat.',
+        instructionWhichOne: 'Buah mana yang tadi?',
+        instructionWhichMulti: 'Buah mana yang tadi kamu lihat?',
+        trayLabel: 'Pilihan kamu:',
+        dragLeftPrompt: 'Buah apa tadi?',
+        dragLeftSub: 'Tarik dari sini',
+        dragFallback: 'Boleh seret garisan atau terus tekan buah jawapan!',
+        mascotCheer: 'Pandainya kamu!',
+        mascotTryAgain: 'Tak apa, cuba lagi soalan baru!',
+        mascotThinking: 'Ingat baik-baik ya!',
+        resHeading: 'Hebat!',
+        resSub: 'Permainan Selesai!',
+        score: 'Skor',
+        correct: 'Jawapan Betul',
+        accuracy: 'Ketepatan',
+        playAgain: 'Main Lagi',
+        backToMenu: 'Kembali ke Menu',
+        howTitle: 'Cara Main',
+        howDesc: 'Lihat buah, ingat buah, kemudian cari buah yang sama!',
+        howStep1: '1. LIHAT',
+        howStep2: '2. INGAT',
+        howStep3: '3. CARI',
+        howReminder: 'Tiada kad tebalik yang mengelirukan! Hanya ingat dan pilih buah yang sama.',
+        howOk: 'Faham! Jom Main',
+        collectionTitle: 'Koleksi Buah',
+        collectionSub: 'Semua kawan buah di Chibi Toyland',
+        close: 'Tutup',
+        profileTitle: 'Profil Pemain',
+        playerName: 'Nama Pemain',
+        familyCode: 'Kod Keluarga',
+        saveProfile: 'Simpan Profil',
+        profileSaved: 'Disimpan!',
+        gamesPlayed: 'Permainan',
+        questions: 'Soalan',
+        historyTitle: 'Sejarah Keluarga',
+        emptyHistory: 'Belum ada rekod permainan.',
+        connectAction: 'Sambungkan buah!',
+        freeModeBadge: 'Bebas'
+      },
+      en: {
+        appTitle: 'Fruit Memory Adventure',
+        homeSubtitle: "Let's look, remember and find the fruits!",
+        btnPlay: 'Start Playing',
+        btnHow: 'How to Play',
+        btnCollection: 'Collection',
+        btnProfile: 'Player Profile',
+        btnMenu: 'Menu',
+        voiceOn: 'Voice: ON',
+        voiceOff: 'Voice: OFF',
+        chooseSession: 'Choose a Game',
+        qUnit: 'Questions',
+        freePlay: 'Free Play',
+        chooseDiff: 'Choose Difficulty',
+        easyTitle: 'Easy',
+        easySub: 'Remember 1 fruit',
+        medTitle: 'Medium',
+        medSub: 'Remember 2 fruits',
+        proTitle: 'Pro',
+        proSub: 'Remember 3 fruits',
+        cancel: 'Cancel',
+        instructionLook: 'Look and remember the fruit!',
+        instructionHiding: 'Ready... find it now!',
+        hidingSub: 'Fruits are hiding now...',
+        instructionFindOne: 'Find the fruit you remember.',
+        instructionWhichOne: 'Which fruit did you see?',
+        instructionWhichMulti: 'Which fruits did you see?',
+        trayLabel: 'Your picks:',
+        dragLeftPrompt: 'Which fruit was it?',
+        dragLeftSub: 'Drag from here',
+        dragFallback: 'You can drag the line or simply tap the fruit!',
+        mascotCheer: 'Super job! You remembered!',
+        mascotTryAgain: "Good try! Let's do a new one!",
+        mascotThinking: 'Look closely and remember!',
+        resHeading: 'Great Job!',
+        resSub: 'Game Complete!',
+        score: 'Score',
+        correct: 'Correct Answers',
+        accuracy: 'Accuracy',
+        playAgain: 'Play Again',
+        backToMenu: 'Back to Menu',
+        howTitle: 'How to Play',
+        howDesc: 'Look at the fruit, remember it, then find the same fruit!',
+        howStep1: '1. LOOK',
+        howStep2: '2. REMEMBER',
+        howStep3: '3. FIND',
+        howReminder: 'No confusing card-flipping! Just look, remember and pick the matching fruit.',
+        howOk: "Got it! Let's Play",
+        collectionTitle: 'Fruit Collection',
+        collectionSub: 'All our fruit friends in Chibi Toyland',
+        close: 'Close',
+        profileTitle: 'Player Profile',
+        playerName: 'Player Name',
+        familyCode: 'Family Code',
+        saveProfile: 'Save Profile',
+        profileSaved: 'Saved!',
+        gamesPlayed: 'Games',
+        questions: 'Questions',
+        historyTitle: 'Family History',
+        emptyHistory: 'No game activity recorded yet.',
+        connectAction: 'Connect the fruit!',
+        freeModeBadge: 'Free'
+      }
+    };
+
+    const FRUIT_REGISTRY = [
+      { id: 'apple', name_ms: 'Epal', name_en: 'Apple', color: '#FF2E51',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <path d="M 50,30 Q 52,14 62,12" stroke="#5C3408" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <ellipse cx="64" cy="18" rx="8" ry="4" fill="#2ECC71" transform="rotate(-20 64 18)"/>
+          <path d="M 50,32 C 34,22 14,35 16,62 C 18,85 36,92 50,86 C 64,92 82,85 84,62 C 86,35 66,22 50,32 Z" fill="#FF1E44" stroke="#B80024" stroke-width="4"/>
+          <ellipse cx="32" cy="48" rx="6" ry="12" fill="#FFA5B5" opacity="0.75" transform="rotate(-15 32 48)"/>
+        </svg>`
+      },
+      { id: 'banana', name_ms: 'Pisang', name_en: 'Banana', color: '#FFD700',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <linearGradient id="bananaBody" x1="20%" y1="15%" x2="80%" y2="85%">
+              <stop offset="0%" stop-color="#FFF975"/>
+              <stop offset="35%" stop-color="#FFDE17"/>
+              <stop offset="80%" stop-color="#F5A605"/>
+              <stop offset="100%" stop-color="#D97706"/>
+            </linearGradient>
+            <linearGradient id="bananaBelly" x1="30%" y1="10%" x2="70%" y2="90%">
+              <stop offset="0%" stop-color="#FFFDC2"/>
+              <stop offset="40%" stop-color="#FFE838"/>
+              <stop offset="100%" stop-color="#F59E0B"/>
+            </linearGradient>
+            <linearGradient id="bananaStem" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#84CC16"/>
+              <stop offset="50%" stop-color="#65A30D"/>
+              <stop offset="100%" stop-color="#3F6212"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="52" cy="89" rx="26" ry="4.5" fill="#000" opacity="0.14"/>
+          <path d="M 24,24 C 44,25 78,42 82,75 C 83,81 78,85 72,83 C 65,81 60,73 57,63 C 50,47 36,36 18,31 C 15,30 16,24 20,24 Z" fill="url(#bananaBody)" stroke="#B45309" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M 23,26 C 42,29 70,47 75,76 C 71,78 65,74 61,66 C 53,51 40,40 22,34 C 20,33 21,27 23,26 Z" fill="url(#bananaBelly)"/>
+          <path d="M 28,31 C 44,35 64,48 70,68" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+          <path d="M 33,28 C 45,30 57,36 64,44" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+          <path d="M 78,80 C 80,82 82,80 83,76 C 81,75 79,77 78,80 Z" fill="#522908" stroke="#3D1D00" stroke-width="1.2"/>
+          <path d="M 23,25 C 21,22 17,16 14,14 C 12,13 9,15 11,18 C 13,22 17,29 19,31 Z" fill="url(#bananaStem)" stroke="#365314" stroke-width="2.2" stroke-linejoin="round"/>
+          <ellipse cx="12" cy="15" rx="2.5" ry="1.8" fill="#54320C" transform="rotate(-30 12 15)"/>
+        </svg>`
+      },
+      { id: 'orange', name_ms: 'Oren', name_en: 'Orange', color: '#FFA500',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="orangeGrad" cx="38%" cy="36%" r="65%">
+              <stop offset="0%" stop-color="#FFC233"/>
+              <stop offset="45%" stop-color="#FF7B00"/>
+              <stop offset="90%" stop-color="#E84A00"/>
+              <stop offset="100%" stop-color="#BA3200"/>
+            </radialGradient>
+            <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#80E838"/>
+              <stop offset="100%" stop-color="#28960C"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="88" rx="20" ry="3.5" fill="#000" opacity="0.12"/>
+          <circle cx="50" cy="56" r="34" fill="url(#orangeGrad)" stroke="#B33600" stroke-width="3.5"/>
+          <path d="M 28,38 C 36,28 52,27 65,33 C 61,31 42,28 32,42 Z" fill="#FFEAA0" opacity="0.8"/>
+          <circle cx="28" cy="52" r="1.5" fill="#FFA333" opacity="0.6"/>
+          <circle cx="35" cy="68" r="1.5" fill="#C94000" opacity="0.5"/>
+          <circle cx="68" cy="62" r="1.5" fill="#C94000" opacity="0.5"/>
+          <circle cx="72" cy="48" r="1.5" fill="#FFA333" opacity="0.6"/>
+          <ellipse cx="50" cy="24" rx="4" ry="2" fill="#5C8C1A"/>
+          <path d="M 50,24 C 50,16 54,12 58,10" fill="none" stroke="#52310C" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 50,22 C 58,12 78,16 78,28 C 66,32 54,26 50,22 Z" fill="url(#leafGrad)" stroke="#237A08" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M 52,22 Q 64,21 75,27" fill="none" stroke="#A7F563" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M 48,23 C 38,17 32,24 35,31 C 42,32 46,26 48,23 Z" fill="url(#leafGrad)" stroke="#237A08" stroke-width="2"/>
+        </svg>`
+      },
+      { id: 'strawberry', name_ms: 'Strawberi', name_en: 'Strawberry', color: '#FF1744',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="sbBodyGrad" cx="38%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#FF5C7A"/>
+              <stop offset="35%" stop-color="#FF1A48"/>
+              <stop offset="75%" stop-color="#D90429"/>
+              <stop offset="100%" stop-color="#8D0018"/>
+            </radialGradient>
+            <linearGradient id="sbLeafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC"/>
+              <stop offset="50%" stop-color="#22C55E"/>
+              <stop offset="100%" stop-color="#15803D"/>
+            </linearGradient>
+            <linearGradient id="sbStemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#65A30D"/>
+              <stop offset="100%" stop-color="#365314"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="91" rx="22" ry="4" fill="#000" opacity="0.14"/>
+          <path d="M 50,22 C 48,12 40,7 32,7 C 36,14 43,18 48,22 Z" fill="#166534"/>
+          <path d="M 50,22 C 52,12 60,7 68,7 C 64,14 57,18 52,22 Z" fill="#166534"/>
+          <path d="M 50,22 C 49,14 52,8 57,5" fill="none" stroke="url(#sbStemGrad)" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 50,24 C 28,18 16,36 18,58 C 20,78 38,90 50,92 C 62,90 80,78 82,58 C 84,36 72,18 50,24 Z" 
+                fill="url(#sbBodyGrad)" stroke="#700013" stroke-width="3.2" stroke-linejoin="round"/>
+          <path d="M 28,34 C 22,46 22,62 28,74" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+          <ellipse cx="26" cy="40" rx="3.5" ry="6" fill="#FFFFFF" opacity="0.7" transform="rotate(-20 26 40)"/>
+          <circle cx="24" cy="54" r="2" fill="#FFFFFF" opacity="0.8"/>
+          <g fill="#FDE047" stroke="#713F12" stroke-width="0.8">
+            <ellipse cx="40" cy="38" rx="1.6" ry="2.6" transform="rotate(-15 40 38)"/>
+            <ellipse cx="60" cy="38" rx="1.6" ry="2.6" transform="rotate(15 60 38)"/>
+            <ellipse cx="32" cy="52" rx="1.6" ry="2.6" transform="rotate(-20 32 52)"/>
+            <ellipse cx="50" cy="48" rx="1.6" ry="2.6"/>
+            <ellipse cx="68" cy="52" rx="1.6" ry="2.6" transform="rotate(20 68 52)"/>
+            <ellipse cx="38" cy="66" rx="1.6" ry="2.6" transform="rotate(-10 38 66)"/>
+            <ellipse cx="50" cy="64" rx="1.6" ry="2.6"/>
+            <ellipse cx="62" cy="66" rx="1.6" ry="2.6" transform="rotate(10 62 66)"/>
+            <ellipse cx="44" cy="78" rx="1.4" ry="2.4" transform="rotate(-5 44 78)"/>
+            <ellipse cx="56" cy="78" rx="1.4" ry="2.4" transform="rotate(5 56 78)"/>
+          </g>
+          <g stroke="#14532D" stroke-width="2" stroke-linejoin="round">
+            <path d="M 50,23 C 44,12 28,15 20,22 C 28,26 38,27 47,26 Z" fill="url(#sbLeafGrad)"/>
+            <path d="M 50,23 C 56,12 72,15 80,22 C 72,26 62,27 53,26 Z" fill="url(#sbLeafGrad)"/>
+            <path d="M 50,23 C 40,24 30,32 31,40 C 37,36 43,30 48,27 Z" fill="url(#sbLeafGrad)"/>
+            <path d="M 50,23 C 60,24 70,32 69,40 C 63,36 57,30 52,27 Z" fill="url(#sbLeafGrad)"/>
+            <path d="M 50,24 C 47,30 48,36 50,38 C 52,36 53,30 50,24 Z" fill="url(#sbLeafGrad)"/>
+          </g>
+          <circle cx="50" cy="24" r="3.5" fill="#15803D"/>
+        </svg>`
+      },
+      { id: 'watermelon', name_ms: 'Tembikai', name_en: 'Watermelon', color: '#00C853',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <linearGradient id="wmFleshGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#FF1A53"/>
+              <stop offset="60%" stop-color="#FF3366"/>
+              <stop offset="100%" stop-color="#FF6B8B"/>
+            </linearGradient>
+            <linearGradient id="wmRindGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00A838"/>
+              <stop offset="50%" stop-color="#00802B"/>
+              <stop offset="100%" stop-color="#005C1F"/>
+            </linearGradient>
+          </defs>
+          <path d="M 12,32 C 14,75 42,92 50,92 C 58,92 86,75 88,32 Z" fill="#00A838"/>
+          <path d="M 12,32 C 14,75 42,92 50,92 C 58,92 86,75 88,32 Z" fill="url(#wmRindGrad)" stroke="#004718" stroke-width="3.5"/>
+          <path d="M 24,54 C 28,66 33,76 38,84" stroke="#003D14" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M 76,54 C 72,66 67,76 62,84" stroke="#003D14" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M 50,75 L 50,91" stroke="#003D14" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M 15,34 C 17,71 43,87 50,87 C 57,87 83,71 85,34 Z" fill="#D4FFB2"/>
+          <path d="M 18,36 C 20,68 44,82 50,82 C 56,82 80,68 82,36 Z" fill="#FF1A53"/>
+          <path d="M 18,36 C 20,68 44,82 50,82 C 56,82 80,68 82,36 Z" fill="url(#wmFleshGrad)"/>
+          <path d="M 21,39 Q 50,42 79,39" stroke="#FFA3B8" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+          <g fill="#2B1414">
+            <path d="M 32,50 C 30,50 29,54 32,57 C 35,54 34,50 32,50 Z"/>
+            <path d="M 44,64 C 42,64 41,68 44,71 C 47,68 46,64 44,64 Z"/>
+            <path d="M 56,64 C 54,64 53,68 56,71 C 59,68 58,64 56,64 Z"/>
+            <path d="M 68,50 C 66,50 65,54 68,57 C 71,54 70,50 68,50 Z"/>
+            <path d="M 50,48 C 48,48 47,52 50,55 C 53,52 52,48 50,48 Z"/>
+          </g>
+          <circle cx="31.5" cy="52.5" r="0.8" fill="#FFF"/>
+          <circle cx="43.5" cy="66.5" r="0.8" fill="#FFF"/>
+          <circle cx="55.5" cy="66.5" r="0.8" fill="#FFF"/>
+          <circle cx="67.5" cy="52.5" r="0.8" fill="#FFF"/>
+          <circle cx="49.5" cy="50.5" r="0.8" fill="#FFF"/>
+          <ellipse cx="38" cy="42" rx="4" ry="2" fill="#FFF" opacity="0.45" transform="rotate(-10 38 42)"/>
+        </svg>`
+      },
+      { id: 'grapes', name_ms: 'Anggur', name_en: 'Grapes', color: '#9C27B0',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="chibiGrapeOrb" cx="35%" cy="30%" r="68%">
+              <stop offset="0%" stop-color="#F5D0FE"/>
+              <stop offset="25%" stop-color="#D946EF"/>
+              <stop offset="70%" stop-color="#86198F"/>
+              <stop offset="100%" stop-color="#4A044E"/>
+            </radialGradient>
+            <linearGradient id="chibiGrapeLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC"/>
+              <stop offset="50%" stop-color="#22C55E"/>
+              <stop offset="100%" stop-color="#15803D"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="92" rx="20" ry="4" fill="#000" opacity="0.14"/>
+          <path d="M 50,22 C 48,13 54,7 61,5" fill="none" stroke="#5D3A1A" stroke-width="5" stroke-linecap="round"/>
+          <path d="M 52,14 Q 63,11 65,18 Q 67,24 61,25" fill="none" stroke="#84CC16" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M 48,22 C 30,12 21,27 28,37 C 36,39 44,30 48,22 Z" fill="url(#chibiGrapeLeaf)" stroke="#166534" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M 32,24 Q 39,27 45,25" fill="none" stroke="#DCFCE7" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="36" cy="38" r="11.5" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="64" cy="38" r="11.5" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="28" cy="54" r="11" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="72" cy="54" r="11" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="37" cy="70" r="10.5" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="63" cy="70" r="10.5" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="50" cy="36" r="12" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="41" cy="52" r="12" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="59" cy="52" r="12" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="50" cy="67" r="11" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <circle cx="50" cy="82" r="9.5" fill="url(#chibiGrapeOrb)" stroke="#3B0764" stroke-width="2.5"/>
+          <ellipse cx="46" cy="32" rx="4" ry="2.2" fill="#FFF" opacity="0.9" transform="rotate(-25 46 32)"/>
+          <ellipse cx="37" cy="48" rx="3.8" ry="2" fill="#FFF" opacity="0.9" transform="rotate(-25 37 48)"/>
+          <ellipse cx="55" cy="48" rx="3.8" ry="2" fill="#FFF" opacity="0.9" transform="rotate(-25 55 48)"/>
+          <ellipse cx="46" cy="63" rx="3.5" ry="1.8" fill="#FFF" opacity="0.9" transform="rotate(-25 46 63)"/>
+          <ellipse cx="46" cy="78" rx="3" ry="1.6" fill="#FFF" opacity="0.9" transform="rotate(-25 46 78)"/>
+        </svg>`
+      },
+      { id: 'mango', name_ms: 'Mangga', name_en: 'Mango', color: '#FFB300',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="mangoSkinGrad" cx="38%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#FFF066"/>
+              <stop offset="35%" stop-color="#FFBD14"/>
+              <stop offset="75%" stop-color="#FF7A00"/>
+              <stop offset="95%" stop-color="#E64A00"/>
+              <stop offset="100%" stop-color="#C23600"/>
+            </radialGradient>
+            <radialGradient id="mangoBlushGrad" cx="30%" cy="30%" r="50%">
+              <stop offset="0%" stop-color="#FF3D71" stop-opacity="0.65"/>
+              <stop offset="70%" stop-color="#FF3D71" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="mangoLeafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#76E028"/>
+              <stop offset="50%" stop-color="#34A810"/>
+              <stop offset="100%" stop-color="#196105"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="91" rx="23" ry="4.5" fill="#000" opacity="0.14"/>
+          <path d="M 46,26 C 45,16 48,10 52,7" fill="none" stroke="#52310C" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 47,26 C 46,17 48,11 51,8" fill="none" stroke="#7A4F1D" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M 48,22 C 62,11 78,16 77,26 C 65,29 53,24 48,22 Z" fill="url(#mangoLeafGrad)" stroke="#174E04" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M 50,22 Q 62,21 73,26" fill="none" stroke="#B8FF73" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M 44,24 C 32,18 26,24 28,32 C 36,33 41,27 44,24 Z" fill="url(#mangoLeafGrad)" stroke="#174E04" stroke-width="1.8"/>
+          <path d="M 46,24 C 68,24 82,42 82,62 C 82,78 74,90 56,92 C 40,94 28,88 24,76 C 18,60 24,36 46,24 Z" fill="url(#mangoSkinGrad)" stroke="#9E3800" stroke-width="3.5" stroke-linejoin="round"/>
+          <ellipse cx="64" cy="48" rx="14" ry="18" fill="url(#mangoBlushGrad)" transform="rotate(15 64 48)"/>
+          <path d="M 32,40 C 26,50 26,65 32,76" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+          <circle cx="28" cy="62" r="1.5" fill="#FFFFFF" opacity="0.9"/>
+        </svg>`
+      },
+      { id: 'pineapple', name_ms: 'Nenas', name_en: 'Pineapple', color: '#FBC02D',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="paBodyGrad" cx="38%" cy="46%" r="65%">
+              <stop offset="0%" stop-color="#FFF975"/>
+              <stop offset="35%" stop-color="#FFD017"/>
+              <stop offset="75%" stop-color="#F59E0B"/>
+              <stop offset="100%" stop-color="#B45309"/>
+            </radialGradient>
+            <linearGradient id="paCrownFront" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#15803D"/>
+              <stop offset="60%" stop-color="#22C55E"/>
+              <stop offset="100%" stop-color="#86EFAC"/>
+            </linearGradient>
+            <linearGradient id="paCrownBack" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#14532D"/>
+              <stop offset="70%" stop-color="#166534"/>
+              <stop offset="100%" stop-color="#4ADE80"/>
+            </linearGradient>
+          </defs>
+          <!-- Ground Shadow -->
+          <ellipse cx="50" cy="92" rx="24" ry="4.5" fill="#000" opacity="0.14"/>
+          <!-- Back Crown Leaves -->
+          <g stroke="#0F3A15" stroke-width="1.8" stroke-linejoin="round">
+            <path d="M 50,38 C 45,22 34,14 26,9 C 33,18 38,28 42,37 Z" fill="url(#paCrownBack)"/>
+            <path d="M 50,38 C 55,22 66,14 74,9 C 67,18 62,28 58,37 Z" fill="url(#paCrownBack)"/>
+            <path d="M 50,36 C 48,16 49,7 50,3 C 51,7 52,16 50,36 Z" fill="url(#paCrownBack)"/>
+          </g>
+          <!-- Front Spiky Crown Leaves -->
+          <g stroke="#14532D" stroke-width="2" stroke-linejoin="round">
+            <path d="M 50,42 C 38,28 22,22 15,19 C 25,25 33,34 40,43 Z" fill="url(#paCrownFront)"/>
+            <path d="M 50,42 C 62,28 78,22 85,19 C 75,25 67,34 60,43 Z" fill="url(#paCrownFront)"/>
+            <path d="M 50,40 C 44,24 41,12 40,7 C 46,14 49,25 50,40 Z" fill="url(#paCrownFront)"/>
+            <path d="M 50,40 C 56,24 59,12 60,7 C 54,14 51,25 50,40 Z" fill="url(#paCrownFront)"/>
+          </g>
+          <!-- Plump Oval Body -->
+          <ellipse cx="50" cy="66" rx="28" ry="29" fill="url(#paBodyGrad)" stroke="#78350F" stroke-width="3.5"/>
+          <!-- Diamond Facet Criss-Cross Grid -->
+          <g stroke="#B45309" stroke-width="1.8" stroke-linecap="round" opacity="0.85">
+            <path d="M 28,52 L 72,80"/>
+            <path d="M 23,64 L 62,89"/>
+            <path d="M 38,42 L 77,69"/>
+            <path d="M 72,52 L 28,80"/>
+            <path d="M 77,64 L 38,89"/>
+            <path d="M 62,42 L 23,69"/>
+          </g>
+          <!-- Diamond Scale Eyes / Chevrons -->
+          <g fill="#78350F" opacity="0.6">
+            <polygon points="50,47 48,51 52,51"/>
+            <polygon points="38,58 36,62 40,62"/>
+            <polygon points="62,58 60,62 64,62"/>
+            <polygon points="50,68 48,72 52,72"/>
+            <polygon points="38,79 36,83 40,83"/>
+            <polygon points="62,79 60,83 64,83"/>
+            <polygon points="28,68 26,72 30,72"/>
+            <polygon points="72,68 70,72 74,72"/>
+          </g>
+          <!-- 3D Glossy Light Arc Highlight -->
+          <path d="M 28,48 C 24,56 24,72 29,82" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+          <circle cx="26" cy="62" r="2" fill="#FFFFFF" opacity="0.9"/>
+        </svg>`
+      },
+      { id: 'papaya', name_ms: 'Betik', name_en: 'Papaya', color: '#FF7043',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <linearGradient id="papayaRind" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#4CAF50"/>
+              <stop offset="30%" stop-color="#8BC34A"/>
+              <stop offset="70%" stop-color="#FFCA28"/>
+              <stop offset="100%" stop-color="#4CAF50"/>
+            </linearGradient>
+            <radialGradient id="papayaFlesh" cx="45%" cy="50%" r="55%">
+              <stop offset="0%" stop-color="#FF3D00"/>
+              <stop offset="65%" stop-color="#FF6E26"/>
+              <stop offset="92%" stop-color="#FFA726"/>
+              <stop offset="100%" stop-color="#FFCA28"/>
+            </radialGradient>
+          </defs>
+          <path d="M 50,14 L 50,8" stroke="#422912" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 50,14 C 64,14 74,28 72,46 C 70,62 82,74 76,88 C 70,100 30,100 24,88 C 18,74 30,62 28,46 C 26,28 36,14 50,14 Z" fill="url(#papayaRind)" stroke="#2E7D32" stroke-width="3"/>
+          <path d="M 50,18 C 60,18 68,30 66,46 C 64,61 74,72 69,84 C 64,94 36,94 31,84 C 26,72 36,61 34,46 C 32,30 40,18 50,18 Z" fill="url(#papayaFlesh)"/>
+          <g stroke="#1A120B" stroke-width="0.8">
+            <circle cx="50" cy="42" r="3.2" fill="#241B16"/><circle cx="50.8" cy="41" r="1" fill="#FFF"/>
+            <circle cx="47" cy="48" r="3.4" fill="#2B201B"/><circle cx="48" cy="47" r="1.1" fill="#FFF"/>
+            <circle cx="53" cy="49" r="3.4" fill="#241B16"/><circle cx="54" cy="48" r="1.1" fill="#FFF"/>
+            <circle cx="50" cy="55" r="3.6" fill="#1C1410"/><circle cx="51" cy="54" r="1.2" fill="#FFF"/>
+            <circle cx="48" cy="63" r="3.4" fill="#2E221C"/><circle cx="49" cy="62" r="1.1" fill="#FFF"/>
+          </g>
+          <path d="M 32,32 C 30,42 32,50 35,55" fill="none" stroke="#FFF" stroke-width="2.2" stroke-linecap="round" opacity="0.6"/>
+        </svg>`
+      },
+      { id: 'guava', name_ms: 'Jambu Batu', name_en: 'Guava', color: '#8BC34A',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="guavaSkin" cx="40%" cy="40%" r="65%">
+              <stop offset="0%" stop-color="#B2E054"/>
+              <stop offset="70%" stop-color="#84C626"/>
+              <stop offset="100%" stop-color="#559914"/>
+            </radialGradient>
+            <radialGradient id="guavaFlesh" cx="45%" cy="50%" r="55%">
+              <stop offset="0%" stop-color="#FF5C8A"/>
+              <stop offset="65%" stop-color="#FF7599"/>
+              <stop offset="90%" stop-color="#FFA8BD"/>
+              <stop offset="100%" stop-color="#F1F8D8"/>
+            </radialGradient>
+          </defs>
+          <path d="M 50,22 C 50,14 54,10 58,8" fill="none" stroke="#5D3A1A" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 52,18 C 66,10 78,16 76,26 C 64,28 54,23 52,18 Z" fill="#6CB820" stroke="#3A7508" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M 50,22 C 68,22 84,36 84,58 C 84,78 68,92 50,92 C 32,92 16,78 16,58 C 16,36 32,22 50,22 Z" fill="url(#guavaSkin)" stroke="#3E730B" stroke-width="3.5"/>
+          <ellipse cx="50" cy="58" rx="29" ry="28" fill="#F4FCE1"/>
+          <ellipse cx="50" cy="58" rx="24" ry="23" fill="url(#guavaFlesh)"/>
+          <g fill="#FFF0BA" stroke="#D19E45" stroke-width="1">
+            <ellipse cx="40" cy="48" rx="2.5" ry="3.5" transform="rotate(-30 40 48)"/>
+            <ellipse cx="50" cy="44" rx="2.5" ry="3.5"/>
+            <ellipse cx="60" cy="48" rx="2.5" ry="3.5" transform="rotate(30 60 48)"/>
+            <ellipse cx="50" cy="72" rx="2.5" ry="3.5"/>
+          </g>
+        </svg>`
+      },
+      { id: 'dragonfruit', name_ms: 'Buah Naga', name_en: 'Dragon Fruit', color: '#E91E63',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="dfChibiBody" cx="42%" cy="46%" r="65%">
+              <stop offset="0%" stop-color="#FF3399"/>
+              <stop offset="60%" stop-color="#E11D48"/>
+              <stop offset="100%" stop-color="#9F1239"/>
+            </radialGradient>
+            <linearGradient id="dfBractScale" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#FF1493"/>
+              <stop offset="40%" stop-color="#4ADE80"/>
+              <stop offset="100%" stop-color="#84CC16"/>
+            </linearGradient>
+            <radialGradient id="dfInnerFlesh" cx="48%" cy="48%" r="58%">
+              <stop offset="0%" stop-color="#FFFFFF"/>
+              <stop offset="85%" stop-color="#F8FAFC"/>
+              <stop offset="100%" stop-color="#E2E8F0"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="50" cy="92" rx="25" ry="4.5" fill="#000" opacity="0.14"/>
+          <path d="M 44,24 C 40,11 34,7 30,5 C 38,7 46,14 47,24 Z" fill="url(#dfBractScale)" stroke="#15803D" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M 56,24 C 60,11 66,7 70,5 C 62,7 54,14 53,24 Z" fill="url(#dfBractScale)" stroke="#15803D" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M 22,44 C 10,38 6,28 8,22 C 13,32 22,37 26,42 Z" fill="url(#dfBractScale)" stroke="#15803D" stroke-width="2"/>
+          <path d="M 78,44 C 90,38 94,28 92,22 C 87,32 78,37 74,42 Z" fill="url(#dfBractScale)" stroke="#15803D" stroke-width="2"/>
+          <ellipse cx="50" cy="58" rx="33" ry="34" fill="url(#dfChibiBody)" stroke="#881337" stroke-width="3.5"/>
+          <ellipse cx="50" cy="59" rx="27" ry="28" fill="url(#dfInnerFlesh)" stroke="#FFB6D9" stroke-width="2"/>
+          <g fill="#1E293B">
+            <ellipse cx="42" cy="45" rx="1.4" ry="2.1" transform="rotate(-20 42 45)"/>
+            <ellipse cx="56" cy="44" rx="1.4" ry="2.1" transform="rotate(25 56 44)"/>
+            <ellipse cx="50" cy="40" rx="1.3" ry="2"/>
+            <ellipse cx="48" cy="52" rx="1.5" ry="2.2" transform="rotate(15 48 52)"/>
+            <ellipse cx="54" cy="63" rx="1.4" ry="2.1" transform="rotate(20 54 63)"/>
+          </g>
+          <path d="M 31,43 C 27,51 28,63 32,71" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+        </svg>`
+      },
+      { id: 'kiwi', name_ms: 'Kiwi', name_en: 'Kiwi', color: '#8D6E63',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="kiwiSkinGrad" cx="38%" cy="38%" r="65%">
+              <stop offset="0%" stop-color="#9C704F"/>
+              <stop offset="50%" stop-color="#734927"/>
+              <stop offset="100%" stop-color="#361B07"/>
+            </radialGradient>
+            <radialGradient id="kiwiFleshGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#F2FED6"/>
+              <stop offset="35%" stop-color="#CCF246"/>
+              <stop offset="100%" stop-color="#649E07"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="56" r="34" fill="url(#kiwiSkinGrad)" stroke="#261203" stroke-width="3.5"/>
+          <circle cx="50" cy="56" r="30" fill="#F4FFE0"/>
+          <circle cx="50" cy="56" r="27" fill="url(#kiwiFleshGrad)"/>
+          <ellipse cx="50" cy="56" rx="9" ry="7" fill="#FFFFFF" stroke="#DCF598" stroke-width="1.2"/>
+          <g fill="#1F150E">
+            <ellipse cx="40" cy="50" rx="1.1" ry="1.9" transform="rotate(-30 40 50)"/>
+            <ellipse cx="50" cy="44" rx="1.1" ry="1.9"/>
+            <ellipse cx="60" cy="50" rx="1.1" ry="1.9" transform="rotate(30 60 50)"/>
+            <ellipse cx="60" cy="62" rx="1.1" ry="1.9" transform="rotate(120 60 62)"/>
+            <ellipse cx="50" cy="68" rx="1.1" ry="1.9"/>
+            <ellipse cx="40" cy="62" rx="1.1" ry="1.9" transform="rotate(-120 40 62)"/>
+          </g>
+          <path d="M 33,45 C 30,52 31,61 35,68" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+        </svg>`
+      },
+      { id: 'pear', name_ms: 'Pir', name_en: 'Pear', color: '#D4E157',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="pearBodyGrad" cx="42%" cy="40%" r="65%">
+              <stop offset="0%" stop-color="#EBF75C"/>
+              <stop offset="55%" stop-color="#C5E32D"/>
+              <stop offset="85%" stop-color="#93C414"/>
+              <stop offset="100%" stop-color="#6F9906"/>
+            </radialGradient>
+            <linearGradient id="pearLeafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7BEB34"/>
+              <stop offset="100%" stop-color="#248A08"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="91" rx="22" ry="4" fill="#000" opacity="0.12"/>
+          <path d="M 50,25 C 49,15 54,9 60,7" fill="none" stroke="#52310C" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 51,22 C 64,12 80,18 78,28 C 66,32 54,26 51,22 Z" fill="url(#pearLeafGrad)" stroke="#1F6907" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M 50,24 C 40,24 37,34 33,48 C 29,62 18,68 18,80 C 18,92 34,95 50,95 C 66,95 82,92 82,80 C 82,68 71,62 67,48 C 63,34 60,24 50,24 Z" fill="url(#pearBodyGrad)" stroke="#4A7005" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M 30,50 C 26,60 26,74 30,82" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+        </svg>`
+      },
+      { id: 'peach', name_ms: 'Pic', name_en: 'Peach', color: '#FF8A80',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="peachSkinGrad" cx="42%" cy="40%" r="65%">
+              <stop offset="0%" stop-color="#FFF0A3"/>
+              <stop offset="28%" stop-color="#FFBD70"/>
+              <stop offset="68%" stop-color="#FF5A6E"/>
+              <stop offset="92%" stop-color="#DE2050"/>
+              <stop offset="100%" stop-color="#A80738"/>
+            </radialGradient>
+            <radialGradient id="peachBlush" cx="30%" cy="35%" r="50%">
+              <stop offset="0%" stop-color="#FFA2BE" stop-opacity="0.85"/>
+              <stop offset="70%" stop-color="#FF386B" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#FF386B" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="peachLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8CEE38"/>
+              <stop offset="55%" stop-color="#3EB615"/>
+              <stop offset="100%" stop-color="#1B6D05"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="91" rx="25" ry="4.5" fill="#000" opacity="0.14"/>
+          <path d="M 50,26 C 48,15 54,9 60,6" fill="none" stroke="#5D3A1A" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 52,22 C 67,11 84,17 83,28 C 70,32 57,26 52,22 Z" fill="url(#peachLeaf)" stroke="#165B04" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M 54,22 Q 67,21 78,27" fill="none" stroke="#B4FF6E" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M 46,24 C 33,18 27,24 29,32 C 37,33 43,27 46,24 Z" fill="url(#peachLeaf)" stroke="#165B04" stroke-width="1.8"/>
+          <path d="M 50,27 C 36,18 16,30 17,56 C 18,78 36,92 50,94 C 64,92 82,78 83,56 C 84,30 64,18 50,27 Z" fill="url(#peachSkinGrad)" stroke="#8A0B2C" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M 50,27 C 48,42 46,65 50,93" fill="none" stroke="#9E0A34" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+          <path d="M 52,28 C 50,44 48,65 52,91" fill="none" stroke="#FFE7BA" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+          <ellipse cx="34" cy="54" rx="14" ry="17" fill="url(#peachBlush)" transform="rotate(-15 34 54)"/>
+          <path d="M 28,38 C 23,48 24,62 30,73" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+          <circle cx="26" cy="62" r="1.8" fill="#FFFFFF" opacity="0.9"/>
+          <path d="M 47,93 Q 50,96 53,93 Z" fill="#DE2050"/>
+        </svg>`
+      },
+      { id: 'plum', name_ms: 'Plum', name_en: 'Plum', color: '#6A1B9A',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="plumGrad" cx="38%" cy="38%" r="65%">
+              <stop offset="0%" stop-color="#C22688"/>
+              <stop offset="40%" stop-color="#7B126E"/>
+              <stop offset="100%" stop-color="#24022B"/>
+            </radialGradient>
+          </defs>
+          <path d="M 50,26 C 50,15 55,9 62,7" fill="none" stroke="#52310C" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 50,28 C 36,22 18,34 18,58 C 18,78 34,92 50,92 C 66,92 82,78 82,58 C 82,34 64,22 50,28 Z" fill="url(#plumGrad)" stroke="#220129" stroke-width="3.5" stroke-linejoin="round"/>
+          <ellipse cx="32" cy="42" rx="4" ry="8" fill="#FFFFFF" opacity="0.75" transform="rotate(-20 32 42)"/>
+        </svg>`
+      },
+      { id: 'cherry', name_ms: 'Ceri', name_en: 'Cherry', color: '#D50000',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <path d="M 34,56 C 34,34 50,20 62,18" stroke="#33691E" stroke-width="4" fill="none"/>
+          <path d="M 66,62 C 60,38 52,22 62,18" stroke="#33691E" stroke-width="4" fill="none"/>
+          <circle cx="34" cy="62" r="18" fill="#D50000" stroke="#9B0000" stroke-width="4"/>
+          <circle cx="66" cy="66" r="18" fill="#D50000" stroke="#9B0000" stroke-width="4"/>
+          <ellipse cx="28" cy="56" rx="4" ry="7" fill="#FF8A80"/>
+        </svg>`
+      },
+      { id: 'blueberry', name_ms: 'Beri Biru', name_en: 'Blueberry', color: '#283593',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="bbMainGrad" cx="38%" cy="36%" r="65%">
+              <stop offset="0%" stop-color="#7B92FF"/>
+              <stop offset="40%" stop-color="#4B56DB"/>
+              <stop offset="100%" stop-color="#141452"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="58" r="32" fill="url(#bbMainGrad)" stroke="#0E0F3B" stroke-width="3.5"/>
+          <ellipse cx="50" cy="38" rx="8" ry="5.5" fill="#0C0D36"/>
+          <path d="M 28,52 C 25,62 27,72 32,79" fill="none" stroke="#9EAEFF" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+        </svg>`
+      },
+      { id: 'raspberry', name_ms: 'Rasberi', name_en: 'Raspberry', color: '#C2185B',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="rbDrupe" cx="35%" cy="32%" r="68%">
+              <stop offset="0%" stop-color="#FFA8CE"/>
+              <stop offset="25%" stop-color="#FF337A"/>
+              <stop offset="70%" stop-color="#C20E4D"/>
+              <stop offset="100%" stop-color="#600021"/>
+            </radialGradient>
+            <linearGradient id="rbStemLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC"/>
+              <stop offset="50%" stop-color="#22C55E"/>
+              <stop offset="100%" stop-color="#15803D"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="92" rx="23" ry="4.5" fill="#000" opacity="0.14"/>
+          <path d="M 50,22 C 48,13 54,7 61,5" fill="none" stroke="#5D3A1A" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 50,25 C 44,15 36,18 31,23 C 37,25 43,26 47,27 Z" fill="url(#rbStemLeaf)" stroke="#14532D" stroke-width="1.8"/>
+          <path d="M 50,25 C 56,15 64,18 69,23 C 63,25 57,26 53,27 Z" fill="url(#rbStemLeaf)" stroke="#14532D" stroke-width="1.8"/>
+          <path d="M 50,25 C 48,17 50,11 50,7 C 52,11 54,17 52,25 Z" fill="url(#rbStemLeaf)" stroke="#14532D" stroke-width="1.5"/>
+          <path d="M 48,26 C 36,28 30,34 32,40 C 37,36 43,32 48,28 Z" fill="url(#rbStemLeaf)" stroke="#14532D" stroke-width="1.8"/>
+          <path d="M 52,26 C 64,28 70,34 68,40 C 63,36 57,32 52,28 Z" fill="url(#rbStemLeaf)" stroke="#14532D" stroke-width="1.8"/>
+          <circle cx="50" cy="27" r="4.5" fill="#15803D"/>
+
+          <circle cx="38" cy="38" r="9" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="50" cy="36" r="9.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="62" cy="38" r="9" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+
+          <circle cx="28" cy="49" r="9.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="42" cy="48" r="10" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="58" cy="48" r="10" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="72" cy="49" r="9.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+
+          <circle cx="31" cy="63" r="10" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="45" cy="62" r="10.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="59" cy="62" r="10.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="69" cy="63" r="10" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+
+          <circle cx="38" cy="76" r="9.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="50" cy="74" r="10" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="62" cy="76" r="9.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+
+          <circle cx="45" cy="85" r="7.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+          <circle cx="55" cy="85" r="7.5" fill="url(#rbDrupe)" stroke="#4C0519" stroke-width="1.8"/>
+
+          <ellipse cx="36" cy="35" rx="3" ry="1.8" fill="#FFF" opacity="0.85" transform="rotate(-20 36 35)"/>
+          <ellipse cx="48" cy="33" rx="3.2" ry="1.8" fill="#FFF" opacity="0.9" transform="rotate(-20 48 33)"/>
+          <ellipse cx="26" cy="46" rx="3" ry="1.8" fill="#FFF" opacity="0.85" transform="rotate(-20 26 46)"/>
+          <ellipse cx="40" cy="45" rx="3.5" ry="2" fill="#FFF" opacity="0.9" transform="rotate(-20 40 45)"/>
+          <ellipse cx="56" cy="45" rx="3.5" ry="2" fill="#FFF" opacity="0.9" transform="rotate(-20 56 45)"/>
+          <ellipse cx="29" cy="60" rx="3.2" ry="1.8" fill="#FFF" opacity="0.85" transform="rotate(-20 29 60)"/>
+          <ellipse cx="43" cy="59" rx="3.5" ry="2" fill="#FFF" opacity="0.9" transform="rotate(-20 43 59)"/>
+          <ellipse cx="57" cy="59" rx="3.5" ry="2" fill="#FFF" opacity="0.9" transform="rotate(-20 57 59)"/>
+          <ellipse cx="36" cy="73" rx="3" ry="1.8" fill="#FFF" opacity="0.85" transform="rotate(-20 36 73)"/>
+          <ellipse cx="48" cy="71" rx="3.2" ry="1.8" fill="#FFF" opacity="0.9" transform="rotate(-20 48 71)"/>
+          <ellipse cx="44" cy="83" rx="2.5" ry="1.4" fill="#FFF" opacity="0.85" transform="rotate(-20 44 83)"/>
+        </svg>`
+      },
+      { id: 'lemon', name_ms: 'Lemon', name_en: 'Lemon', color: '#FFEB3B',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="lemonBodyGrad" cx="42%" cy="40%" r="65%">
+              <stop offset="0%" stop-color="#FFFFA8"/>
+              <stop offset="35%" stop-color="#FFEA2B"/>
+              <stop offset="75%" stop-color="#F5B800"/>
+              <stop offset="100%" stop-color="#C28400"/>
+            </radialGradient>
+          </defs>
+          <path d="M 50,24 C 68,24 82,38 88,52 C 92,60 90,66 84,70 C 76,76 68,88 50,88 C 32,88 24,76 16,70 C 10,66 8,60 12,52 C 18,38 32,24 50,24 Z" fill="url(#lemonBodyGrad)" stroke="#A16207" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M 30,42 C 26,50 26,62 30,70" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+        </svg>`
+      },
+      { id: 'lime', name_ms: 'Limau Nipis', name_en: 'Lime', color: '#76FF03',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="limeWholeRind" cx="38%" cy="36%" r="65%">
+              <stop offset="0%" stop-color="#BEF264"/>
+              <stop offset="35%" stop-color="#84CC16"/>
+              <stop offset="80%" stop-color="#4D7C0F"/>
+              <stop offset="100%" stop-color="#1F4D03"/>
+            </radialGradient>
+            <radialGradient id="limeWheelFlesh" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FEFCE8"/>
+              <stop offset="30%" stop-color="#DCFCE7"/>
+              <stop offset="65%" stop-color="#86EFAC"/>
+              <stop offset="100%" stop-color="#4ADE80"/>
+            </radialGradient>
+            <linearGradient id="limeWheelRind" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#65A30D"/>
+              <stop offset="100%" stop-color="#365314"/>
+            </linearGradient>
+            <linearGradient id="limeLeafG" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC"/>
+              <stop offset="100%" stop-color="#15803D"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="91" rx="27" ry="4.5" fill="#000" opacity="0.14"/>
+          <g transform="translate(4, -4)">
+            <ellipse cx="36" cy="42" rx="24" ry="24" fill="#65A30D"/>
+            <ellipse cx="36" cy="42" rx="24" ry="24" fill="url(#limeWholeRind)" stroke="#1F4D03" stroke-width="2.8"/>
+            <ellipse cx="28" cy="32" rx="4" ry="8" fill="#FFFFFF" opacity="0.75" transform="rotate(-25 28 32)"/>
+            <path d="M 36,18 C 36,12 40,8 45,6" fill="none" stroke="#54320C" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 38,18 C 48,11 60,15 60,24 C 50,26 42,22 38,18 Z" fill="url(#limeLeafG)" stroke="#166534" stroke-width="1.8"/>
+          </g>
+          <g transform="translate(14, 12)">
+            <circle cx="42" cy="42" r="32" fill="#14532D"/>
+            <circle cx="42" cy="42" r="32" fill="url(#limeWheelRind)" stroke="#14532D" stroke-width="2.5"/>
+            <circle cx="42" cy="42" r="28.5" fill="#ECFCCB"/>
+            <circle cx="42" cy="42" r="26" fill="#4ADE80"/>
+            <circle cx="42" cy="42" r="26" fill="url(#limeWheelFlesh)"/>
+            <g stroke="#ECFCCB" stroke-width="2" fill="#4ADE80">
+              <path d="M 42,42 L 42,16 A 26,26 0 0,1 60,23 Z"/>
+              <path d="M 42,42 L 60,23 A 26,26 0 0,1 68,42 Z"/>
+              <path d="M 42,42 L 68,42 A 26,26 0 0,1 60,61 Z"/>
+              <path d="M 42,42 L 60,61 A 26,26 0 0,1 42,68 Z"/>
+              <path d="M 42,42 L 42,68 A 26,26 0 0,1 24,61 Z"/>
+              <path d="M 42,42 L 24,61 A 26,26 0 0,1 16,42 Z"/>
+              <path d="M 42,42 L 16,42 A 26,26 0 0,1 24,23 Z"/>
+              <path d="M 42,42 L 24,23 A 26,26 0 0,1 42,16 Z"/>
+            </g>
+            <circle cx="42" cy="42" r="4.5" fill="#FEFCE8" stroke="#D9F99D" stroke-width="1"/>
+            <path d="M 22,30 A 25,25 0 0,1 36,18" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+            <circle cx="28" cy="46" r="1.5" fill="#FFFFFF" opacity="0.9"/>
+            <circle cx="56" cy="34" r="1.5" fill="#FFFFFF" opacity="0.9"/>
+          </g>
+        </svg>`
+      },
+      { id: 'coconut', name_ms: 'Kelapa', name_en: 'Coconut', color: '#5D4037',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="cocoShellGrad" cx="38%" cy="40%" r="65%">
+              <stop offset="0%" stop-color="#9C6B3E"/>
+              <stop offset="55%" stop-color="#6E431F"/>
+              <stop offset="100%" stop-color="#301504"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="50" cy="58" rx="36" ry="32" fill="url(#cocoShellGrad)" stroke="#2B1203" stroke-width="3.5"/>
+          <ellipse cx="50" cy="50" rx="32" ry="22" fill="#FFFFFF" stroke="#E3DCD5" stroke-width="1.5"/>
+          <ellipse cx="50" cy="52" rx="22" ry="14" fill="#A0E5FF"/>
+          <g transform="rotate(20 62 38)">
+            <rect x="58" y="15" width="6" height="33" rx="3" fill="#FF2E93" stroke="#BA005E" stroke-width="1.2"/>
+          </g>
+        </svg>`
+      },
+      { id: 'avocado', name_ms: 'Avokado', name_en: 'Avocado', color: '#558B2F',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="avoSkin" cx="42%" cy="40%" r="65%">
+              <stop offset="0%" stop-color="#3F6212"/>
+              <stop offset="100%" stop-color="#142305"/>
+            </radialGradient>
+            <radialGradient id="avoFlesh" cx="50%" cy="58%" r="58%">
+              <stop offset="0%" stop-color="#FEF9C3"/>
+              <stop offset="45%" stop-color="#ECFCCB"/>
+              <stop offset="100%" stop-color="#65A30D"/>
+            </radialGradient>
+          </defs>
+          <path d="M 50,18 C 38,18 31,30 28,48 C 24,66 22,88 50,92 C 78,88 76,66 72,48 C 69,30 62,18 50,18 Z" fill="url(#avoSkin)" stroke="#111D04" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M 50,22 C 40,22 34,33 32,48 C 29,64 28,84 50,88 C 72,84 71,64 68,48 C 66,33 60,22 50,22 Z" fill="url(#avoFlesh)"/>
+          <circle cx="50" cy="64" r="17.5" fill="#78350F" stroke="#270E02" stroke-width="2.5"/>
+          <ellipse cx="44" cy="57" rx="5.5" ry="3.5" fill="#FFFFFF" opacity="0.8" transform="rotate(-30 44 57)"/>
+        </svg>`
+      },
+      { id: 'jackfruit', name_ms: 'Nangka', name_en: 'Jackfruit', color: '#9E9D24',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="jackSkin" cx="40%" cy="38%" r="65%">
+              <stop offset="0%" stop-color="#AECB28"/>
+              <stop offset="55%" stop-color="#7D9914"/>
+              <stop offset="90%" stop-color="#4F6608"/>
+              <stop offset="100%" stop-color="#344503"/>
+            </radialGradient>
+            <radialGradient id="jackPodGrad" cx="38%" cy="35%" r="60%">
+              <stop offset="0%" stop-color="#FFF275"/>
+              <stop offset="35%" stop-color="#FFCA18"/>
+              <stop offset="85%" stop-color="#F57F17"/>
+              <stop offset="100%" stop-color="#D86000"/>
+            </radialGradient>
+            <linearGradient id="jackLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#66BB6A"/>
+              <stop offset="100%" stop-color="#2E7D32"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="92" rx="26" ry="4.5" fill="#000" opacity="0.14"/>
+          <path d="M 50,22 C 48,13 53,7 59,5" fill="none" stroke="#5D3A1A" stroke-width="5" stroke-linecap="round"/>
+          <path d="M 52,15 C 64,8 76,14 74,23 C 63,26 53,21 52,15 Z" fill="url(#jackLeaf)" stroke="#1B5E20" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M 50,20 C 68,20 80,34 81,58 C 82,78 72,92 50,92 C 28,92 18,78 19,58 C 20,34 32,20 50,20 Z" fill="url(#jackSkin)" stroke="#2B3A03" stroke-width="3" stroke-linejoin="round"/>
+          <g fill="#435905" opacity="0.45">
+            <circle cx="28" cy="34" r="1.6"/><circle cx="36" cy="30" r="1.6"/><circle cx="44" cy="27" r="1.6"/><circle cx="56" cy="27" r="1.6"/><circle cx="64" cy="30" r="1.6"/><circle cx="72" cy="34" r="1.6"/>
+            <circle cx="24" cy="46" r="1.8"/><circle cx="76" cy="46" r="1.8"/>
+            <circle cx="22" cy="60" r="1.8"/><circle cx="78" cy="60" r="1.8"/>
+            <circle cx="25" cy="74" r="1.8"/><circle cx="75" cy="74" r="1.8"/>
+            <circle cx="32" cy="85" r="1.6"/><circle cx="42" cy="88" r="1.6"/><circle cx="58" cy="88" r="1.6"/><circle cx="68" cy="85" r="1.6"/>
+          </g>
+          <path d="M 33,40 C 44,32 62,33 69,43 C 74,54 73,70 66,79 C 57,86 42,86 33,77 C 26,67 25,49 33,40 Z" fill="#FFFDE7" stroke="#7D9914" stroke-width="2.5"/>
+          <path d="M 38,44 Q 45,55 36,66" fill="none" stroke="#FFE082" stroke-width="2" stroke-linecap="round"/>
+          <path d="M 64,48 Q 57,58 63,70" fill="none" stroke="#FFE082" stroke-width="2" stroke-linecap="round"/>
+          <path d="M 44,38 C 53,36 59,42 58,50 C 56,56 48,58 41,54 C 36,49 38,40 44,38 Z" fill="url(#jackPodGrad)" stroke="#B25900" stroke-width="1.8"/>
+          <ellipse cx="45" cy="42" rx="4" ry="2.2" fill="#FFF" opacity="0.8" transform="rotate(-20 45 42)"/>
+          <path d="M 36,54 C 44,52 48,58 47,67 C 45,74 38,76 32,71 C 27,65 29,56 36,54 Z" fill="url(#jackPodGrad)" stroke="#B25900" stroke-width="1.8"/>
+          <ellipse cx="36" cy="58" rx="3.5" ry="1.8" fill="#FFF" opacity="0.8" transform="rotate(-25 36 58)"/>
+          <path d="M 52,52 C 60,50 66,56 64,66 C 63,74 55,77 49,72 C 45,67 46,56 52,52 Z" fill="url(#jackPodGrad)" stroke="#B25900" stroke-width="1.8"/>
+          <ellipse cx="54" cy="56" rx="3.5" ry="2" fill="#FFF" opacity="0.8" transform="rotate(-15 54 56)"/>
+          <path d="M 24,38 C 21,48 21,64 25,74" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+        </svg>`
+      },
+      { id: 'durian', name_ms: 'Durian', name_en: 'Durian', color: '#C0CA33',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="durianHusk3D" cx="42%" cy="40%" r="65%">
+              <stop offset="0%" stop-color="#D9E642"/>
+              <stop offset="45%" stop-color="#8FA815"/>
+              <stop offset="85%" stop-color="#556908"/>
+              <stop offset="100%" stop-color="#2D3802"/>
+            </radialGradient>
+            <radialGradient id="durianFlesh3D" cx="35%" cy="32%" r="65%">
+              <stop offset="0%" stop-color="#FFFDC2"/>
+              <stop offset="35%" stop-color="#FFDE17"/>
+              <stop offset="80%" stop-color="#F59E0B"/>
+              <stop offset="100%" stop-color="#B45309"/>
+            </radialGradient>
+            <linearGradient id="durianStemWood" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#A1887F"/>
+              <stop offset="50%" stop-color="#5D4037"/>
+              <stop offset="100%" stop-color="#3E2723"/>
+            </linearGradient>
+            <linearGradient id="durianLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC"/>
+              <stop offset="100%" stop-color="#15803D"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="92" rx="28" ry="4.5" fill="#000" opacity="0.16"/>
+          <path d="M 48,18 C 47,12 49,6 54,4" fill="none" stroke="url(#durianStemWood)" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="50" cy="18" rx="7" ry="3.5" fill="#4E342E"/>
+          <path d="M 52,14 C 64,8 76,14 74,23 C 63,26 53,21 52,14 Z" fill="url(#durianLeaf)" stroke="#166534" stroke-width="2"/>
+          <path d="M 50,18 
+                   L 56,12 L 60,19 L 67,15 L 70,22 L 78,20 L 80,28 L 87,28 L 86,36 L 92,39 L 89,47 L 93,52 L 89,59 L 93,65 L 87,71 L 89,78 L 82,82 L 81,89 L 73,91 L 70,97 L 62,94 L 56,98 L 50,94 L 44,98 L 38,94 L 30,97 L 27,91 L 19,89 L 18,82 L 11,78 L 13,71 L 7,65 L 11,59 L 7,52 L 11,47 L 8,39 L 14,36 L 13,28 L 20,28 L 22,20 L 30,22 L 33,15 L 40,19 L 44,12 Z" 
+                fill="url(#durianHusk3D)" stroke="#222B01" stroke-width="3" stroke-linejoin="round"/>
+          <g fill="#374503" opacity="0.4">
+            <polygon points="24,38 29,32 31,39"/>
+            <polygon points="20,53 26,48 27,55"/>
+            <polygon points="24,67 30,62 32,69"/>
+            <polygon points="76,36 80,31 82,38"/>
+            <polygon points="78,52 83,47 84,54"/>
+            <polygon points="74,67 79,62 81,69"/>
+          </g>
+          <path d="M 50,24 C 68,24 75,40 72,64 C 70,80 60,88 50,88 C 40,88 30,80 28,64 C 25,40 32,24 50,24 Z" 
+                fill="#FCF9E0" stroke="#3D4B04" stroke-width="2.8" stroke-linejoin="round"/>
+          <path d="M 50,27 C 64,27 70,41 68,63 C 66,77 58,84 50,84 C 42,84 34,77 32,63 C 30,41 36,27 50,27 Z" 
+                fill="#FFFDE7"/>
+          <line x1="50" y1="28" x2="50" y2="83" stroke="#E6DBA8" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M 40,34 C 47,32 49,40 48,48 C 47,54 40,56 35,51 C 31,46 33,37 40,34 Z" 
+                fill="url(#durianFlesh3D)" stroke="#9A3412" stroke-width="1.8" stroke-linejoin="round"/>
+          <ellipse cx="40" cy="38" rx="3.5" ry="2" fill="#FFFFFF" opacity="0.85" transform="rotate(-25 40 38)"/>
+          <path d="M 37,54 C 46,52 48,60 47,70 C 45,77 39,79 34,74 C 30,69 31,58 37,54 Z" 
+                fill="url(#durianFlesh3D)" stroke="#9A3412" stroke-width="1.8" stroke-linejoin="round"/>
+          <ellipse cx="37" cy="60" rx="3.5" ry="2.2" fill="#FFFFFF" opacity="0.8" transform="rotate(-20 37 60)"/>
+          <path d="M 60,34 C 67,37 69,46 65,51 C 60,56 53,54 52,48 C 51,40 53,32 60,34 Z" 
+                fill="url(#durianFlesh3D)" stroke="#9A3412" stroke-width="1.8" stroke-linejoin="round"/>
+          <ellipse cx="60" cy="38" rx="3.5" ry="2" fill="#FFFFFF" opacity="0.85" transform="rotate(25 60 38)"/>
+          <path d="M 63,54 C 69,58 70,68 66,73 C 61,78 55,76 53,70 C 52,60 55,52 63,54 Z" 
+                fill="url(#durianFlesh3D)" stroke="#9A3412" stroke-width="1.8" stroke-linejoin="round"/>
+          <ellipse cx="63" cy="60" rx="3.5" ry="2.2" fill="#FFFFFF" opacity="0.8" transform="rotate(20 63 60)"/>
+        </svg>`
+      },
+      { id: 'rambutan', name_ms: 'Rambutan', name_en: 'Rambutan', color: '#D32F2F',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="rambutanBody" cx="38%" cy="36%" r="65%">
+              <stop offset="0%" stop-color="#FF3868"/>
+              <stop offset="40%" stop-color="#E11D48"/>
+              <stop offset="80%" stop-color="#BE123C"/>
+              <stop offset="100%" stop-color="#881337"/>
+            </radialGradient>
+            <radialGradient id="rambutanFlesh" cx="42%" cy="40%" r="58%">
+              <stop offset="0%" stop-color="#FFFFFF"/>
+              <stop offset="60%" stop-color="#F1F5F9"/>
+              <stop offset="90%" stop-color="#E2E8F0"/>
+              <stop offset="100%" stop-color="#CBD5E1"/>
+            </radialGradient>
+            <linearGradient id="rambLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC"/>
+              <stop offset="100%" stop-color="#15803D"/>
+            </linearGradient>
+          </defs>
+          <!-- Ground Shadow -->
+          <ellipse cx="50" cy="92" rx="27" ry="4.5" fill="#000" opacity="0.14"/>
+          <!-- Stem & Leaf -->
+          <path d="M 50,22 C 48,13 54,7 61,5" fill="none" stroke="#5D3A1A" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 52,14 C 64,8 76,14 74,23 C 63,26 53,21 52,14 Z" fill="url(#rambLeaf)" stroke="#166534" stroke-width="2" stroke-linejoin="round"/>
+          <!-- Outer Back Curved Hairs / Spinterns radiating with neon tips -->
+          <g stroke="#BE123C" stroke-width="2.6" stroke-linecap="round" fill="none">
+            <path d="M 28,34 Q 18,25 15,32"/>
+            <path d="M 22,46 Q 10,42 8,50"/>
+            <path d="M 20,60 Q 8,62 10,72"/>
+            <path d="M 25,75 Q 16,84 24,90"/>
+            <path d="M 38,87 Q 34,97 44,97"/>
+            <path d="M 54,88 Q 58,98 68,95"/>
+            <path d="M 72,82 Q 84,90 89,80"/>
+            <path d="M 80,68 Q 92,68 93,58"/>
+            <path d="M 80,50 Q 94,44 88,34"/>
+            <path d="M 72,36 Q 80,24 72,20"/>
+            <path d="M 56,26 Q 58,16 48,18"/>
+            <path d="M 38,26 Q 32,18 25,24"/>
+          </g>
+          <!-- Neon Lime Hair Tips -->
+          <g fill="#A3E635">
+            <circle cx="15" cy="32" r="2.2"/><circle cx="8" cy="50" r="2.2"/><circle cx="10" cy="72" r="2.2"/>
+            <circle cx="24" cy="90" r="2.2"/><circle cx="44" cy="97" r="2.2"/><circle cx="68" cy="95" r="2.2"/>
+            <circle cx="89" cy="80" r="2.2"/><circle cx="93" cy="58" r="2.2"/><circle cx="88" cy="34" r="2.2"/>
+            <circle cx="72" cy="20" r="2.2"/><circle cx="48" cy="18" r="2.2"/><circle cx="25" cy="24" r="2.2"/>
+          </g>
+          <!-- Plump Crimson Rind Body -->
+          <circle cx="50" cy="58" r="32" fill="url(#rambutanBody)" stroke="#700018" stroke-width="3"/>
+          <!-- Rind Peeling Rim / Edge -->
+          <path d="M 32,46 C 36,34 64,34 68,46 C 74,56 70,72 62,78 C 50,84 36,80 32,68 Z" fill="#FFE4E6" stroke="#9F1239" stroke-width="2.5"/>
+          <!-- Succulent Translucent White Egg Aril -->
+          <ellipse cx="50" cy="57" rx="17" ry="18" fill="url(#rambutanFlesh)" stroke="#E2E8F0" stroke-width="1.5"/>
+          <!-- Seed Shadow peek inside -->
+          <ellipse cx="50" cy="58" rx="8" ry="10" fill="#94A3B8" opacity="0.25"/>
+          <!-- Glossy Dewdrop Reflections -->
+          <ellipse cx="44" cy="50" rx="5" ry="7" fill="#FFFFFF" opacity="0.9" transform="rotate(-20 44 50)"/>
+          <circle cx="42" cy="62" r="2.2" fill="#FFFFFF" opacity="0.85"/>
+          <circle cx="56" cy="52" r="2" fill="#FFFFFF" opacity="0.8"/>
+          <!-- Front Surface Curved Spines -->
+          <g stroke="#BE123C" stroke-width="2.4" stroke-linecap="round" fill="none">
+            <path d="M 30,76 Q 24,84 29,88"/>
+            <path d="M 70,76 Q 78,82 74,88"/>
+            <path d="M 50,86 Q 52,94 57,93"/>
+          </g>
+          <g fill="#A3E635">
+            <circle cx="29" cy="88" r="1.8"/><circle cx="74" cy="88" r="1.8"/><circle cx="57" cy="93" r="1.8"/>
+          </g>
+        </svg>`
+      },
+      { id: 'mangosteen', name_ms: 'Manggis', name_en: 'Mangosteen', color: '#4A148C',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="mngHuskGrad" cx="38%" cy="36%" r="65%">
+              <stop offset="0%" stop-color="#721782"/>
+              <stop offset="45%" stop-color="#460555"/>
+              <stop offset="85%" stop-color="#280033"/>
+              <stop offset="100%" stop-color="#14001A"/>
+            </radialGradient>
+            <radialGradient id="mngRindRim" cx="50%" cy="58%" r="55%">
+              <stop offset="0%" stop-color="#D91E5B"/>
+              <stop offset="70%" stop-color="#9E083B"/>
+              <stop offset="100%" stop-color="#5C0020"/>
+            </radialGradient>
+            <radialGradient id="mngFleshSegment" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#FFFFFF"/>
+              <stop offset="70%" stop-color="#F5F3FF"/>
+              <stop offset="100%" stop-color="#DDD6FE"/>
+            </radialGradient>
+            <linearGradient id="mngCalyxLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7BE32D"/>
+              <stop offset="50%" stop-color="#3FA611"/>
+              <stop offset="100%" stop-color="#1B6105"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="92" rx="27" ry="4.5" fill="#000" opacity="0.16"/>
+          <ellipse cx="38" cy="23" rx="10" ry="6" fill="url(#mngCalyxLeaf)" stroke="#134703" stroke-width="2" transform="rotate(-30 38 23)"/>
+          <ellipse cx="62" cy="23" rx="10" ry="6" fill="url(#mngCalyxLeaf)" stroke="#134703" stroke-width="2" transform="rotate(30 62 23)"/>
+          <path d="M 50,22 C 49,12 53,7 57,5" fill="none" stroke="#543315" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="44" cy="27" rx="11" ry="6.5" fill="url(#mngCalyxLeaf)" stroke="#134703" stroke-width="2" transform="rotate(-10 44 27)"/>
+          <ellipse cx="56" cy="27" rx="11" ry="6.5" fill="url(#mngCalyxLeaf)" stroke="#134703" stroke-width="2" transform="rotate(10 56 27)"/>
+          <circle cx="50" cy="58" r="34" fill="url(#mngHuskGrad)" stroke="#1B0024" stroke-width="3.5"/>
+          <ellipse cx="50" cy="62" rx="26" ry="24" fill="url(#mngRindRim)" stroke="#450016" stroke-width="2.5"/>
+          <ellipse cx="50" cy="62" rx="23" ry="21" fill="#F8EBF0" opacity="0.3"/>
+          <path d="M 50,44 C 44,44 43,53 50,56 C 57,53 56,44 50,44 Z" fill="url(#mngFleshSegment)" stroke="#A78BFA" stroke-width="1.4"/>
+          <ellipse cx="48" cy="47" rx="2" ry="1.2" fill="#FFF" opacity="0.9"/>
+          <path d="M 36,52 C 34,46 43,47 47,54 C 44,60 36,58 36,52 Z" fill="url(#mngFleshSegment)" stroke="#A78BFA" stroke-width="1.4"/>
+          <ellipse cx="39" cy="52" rx="2" ry="1.2" fill="#FFF" opacity="0.9"/>
+          <path d="M 64,52 C 66,46 57,47 53,54 C 56,60 64,58 64,52 Z" fill="url(#mngFleshSegment)" stroke="#A78BFA" stroke-width="1.4"/>
+          <ellipse cx="61" cy="52" rx="2" ry="1.2" fill="#FFF" opacity="0.9"/>
+          <path d="M 40,68 C 36,63 44,57 48,62 C 48,70 42,72 40,68 Z" fill="url(#mngFleshSegment)" stroke="#A78BFA" stroke-width="1.4"/>
+          <ellipse cx="42" cy="66" rx="2" ry="1.2" fill="#FFF" opacity="0.9"/>
+          <path d="M 60,68 C 64,63 56,57 52,62 C 52,70 58,72 60,68 Z" fill="url(#mngFleshSegment)" stroke="#A78BFA" stroke-width="1.4"/>
+          <ellipse cx="58" cy="66" rx="2" ry="1.2" fill="#FFF" opacity="0.9"/>
+          <circle cx="50" cy="58" r="2.5" fill="#DDD6FE"/>
+          <path d="M 23,46 C 20,54 21,66 25,74" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+        </svg>`
+      },
+      { id: 'starfruit', name_ms: 'Belimbing', name_en: 'Starfruit', color: '#FFEE58',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="sfFlesh" cx="48%" cy="48%" r="62%">
+              <stop offset="0%" stop-color="#FFFFA8"/>
+              <stop offset="60%" stop-color="#FFF033"/>
+              <stop offset="100%" stop-color="#A5C70A"/>
+            </radialGradient>
+          </defs>
+          <path d="M 50,14 C 54,14 58,26 62,34 C 68,36 78,34 86,40 C 89,43 89,48 84,52 C 78,57 74,65 76,73 C 77,78 74,82 69,82 C 61,81 55,76 50,80 C 45,76 39,81 31,82 C 26,82 23,78 24,73 C 26,65 22,57 16,52 C 11,48 11,43 14,40 C 22,34 32,36 38,34 C 42,26 46,14 50,14 Z" fill="url(#sfFlesh)" stroke="#C47A00" stroke-width="3.5" stroke-linejoin="round"/>
+          <circle cx="50" cy="52" r="11" fill="#FFFFFF" stroke="#C8D650" stroke-width="1.8"/>
+        </svg>`
+      },
+      { id: 'passionfruit', name_ms: 'Markisa', name_en: 'Passion Fruit', color: '#6A1B9A',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="pfRindGrad" cx="38%" cy="36%" r="65%">
+              <stop offset="0%" stop-color="#9333EA"/>
+              <stop offset="45%" stop-color="#6B21A8"/>
+              <stop offset="85%" stop-color="#3B0764"/>
+              <stop offset="100%" stop-color="#1E0338"/>
+            </radialGradient>
+            <radialGradient id="pfPulpPool" cx="45%" cy="45%" r="55%">
+              <stop offset="0%" stop-color="#FEF08A"/>
+              <stop offset="35%" stop-color="#FBBF24"/>
+              <stop offset="75%" stop-color="#F59E0B"/>
+              <stop offset="100%" stop-color="#D97706"/>
+            </radialGradient>
+            <linearGradient id="pfStemG" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC"/>
+              <stop offset="100%" stop-color="#15803D"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="92" rx="27" ry="4.5" fill="#000" opacity="0.15"/>
+          <path d="M 50,22 C 48,13 54,7 61,5" fill="none" stroke="#5D3A1A" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 52,14 Q 64,10 65,18 Q 66,24 60,25" fill="none" stroke="#84CC16" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M 48,22 C 34,14 24,26 28,34 C 36,36 44,28 48,22 Z" fill="url(#pfStemG)" stroke="#166534" stroke-width="1.8"/>
+          <circle cx="50" cy="58" r="34" fill="url(#pfRindGrad)" stroke="#1E0338" stroke-width="3.2"/>
+          <circle cx="50" cy="58" r="28" fill="#FFFBEB" stroke="#E9D5FF" stroke-width="2"/>
+          <circle cx="50" cy="58" r="23" fill="url(#pfPulpPool)"/>
+          <g>
+            <ellipse cx="42" cy="48" rx="4.5" ry="3" fill="#FBBF24" opacity="0.8" transform="rotate(-25 42 48)"/>
+            <path d="M 42,46 C 45,46 46,50 43,52 C 40,51 40,47 42,46 Z" fill="#1C1917"/>
+            <circle cx="41.5" cy="47.5" r="0.9" fill="#FFF"/>
+
+            <ellipse cx="58" cy="48" rx="4.5" ry="3" fill="#FBBF24" opacity="0.8" transform="rotate(25 58 48)"/>
+            <path d="M 58,46 C 61,46 62,50 59,52 C 56,51 56,47 58,46 Z" fill="#1C1917"/>
+            <circle cx="57.5" cy="47.5" r="0.9" fill="#FFF"/>
+
+            <ellipse cx="50" cy="58" rx="5" ry="3.5" fill="#FDE047" opacity="0.9"/>
+            <path d="M 50,55 C 53,55 54,60 51,62 C 48,61 48,56 50,55 Z" fill="#1C1917"/>
+            <circle cx="49.5" cy="56.5" r="1.1" fill="#FFF"/>
+
+            <ellipse cx="40" cy="67" rx="4.5" ry="3" fill="#FBBF24" opacity="0.8" transform="rotate(20 40 67)"/>
+            <path d="M 40,65 C 43,65 44,69 41,71 C 38,70 38,66 40,65 Z" fill="#1C1917"/>
+            <circle cx="39.5" cy="66.5" r="0.9" fill="#FFF"/>
+
+            <ellipse cx="60" cy="67" rx="4.5" ry="3" fill="#FBBF24" opacity="0.8" transform="rotate(-20 60 67)"/>
+            <path d="M 60,65 C 63,65 64,69 61,71 C 58,70 58,66 60,65 Z" fill="#1C1917"/>
+            <circle cx="59.5" cy="66.5" r="0.9" fill="#FFF"/>
+          </g>
+          <path d="M 23,48 C 20,56 21,68 26,76" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+          <circle cx="28" cy="40" r="2.2" fill="#FFFFFF" opacity="0.85"/>
+        </svg>`
+      },
+      { id: 'lychee', name_ms: 'Laici', name_en: 'Lychee', color: '#EF5350',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <defs>
+            <radialGradient id="lycheeRindGrad" cx="38%" cy="36%" r="65%">
+              <stop offset="0%" stop-color="#FB7185"/>
+              <stop offset="40%" stop-color="#E11D48"/>
+              <stop offset="85%" stop-color="#9F1239"/>
+              <stop offset="100%" stop-color="#4C0519"/>
+            </radialGradient>
+            <radialGradient id="lycheeFleshGrad" cx="42%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#FFFFFF"/>
+              <stop offset="55%" stop-color="#F8FAFC"/>
+              <stop offset="85%" stop-color="#E2E8F0"/>
+              <stop offset="100%" stop-color="#CBD5E1"/>
+            </radialGradient>
+            <linearGradient id="lycheeLeafG" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC"/>
+              <stop offset="100%" stop-color="#15803D"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="50" cy="92" rx="27" ry="4.5" fill="#000" opacity="0.14"/>
+          <path d="M 50,24 C 48,15 54,8 60,6" fill="none" stroke="#5D3A1A" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 52,18 C 68,10 82,16 80,26 C 68,30 56,24 52,18 Z" fill="url(#lycheeLeafG)" stroke="#166534" stroke-width="2"/>
+          <path d="M 54,18 Q 67,17 76,24" fill="none" stroke="#DCFCE7" stroke-width="1.3" stroke-linecap="round"/>
+          <g transform="translate(14, -4)">
+            <circle cx="48" cy="46" r="22" fill="url(#lycheeRindGrad)" stroke="#4C0519" stroke-width="2"/>
+            <g fill="#881337" opacity="0.6">
+              <circle cx="40" cy="38" r="1.5"/><circle cx="48" cy="34" r="1.5"/><circle cx="56" cy="38" r="1.5"/>
+              <circle cx="36" cy="46" r="1.5"/><circle cx="60" cy="46" r="1.5"/><circle cx="44" cy="54" r="1.5"/><circle cx="52" cy="54" r="1.5"/>
+            </g>
+          </g>
+          <g transform="translate(-4, 4)">
+            <ellipse cx="44" cy="62" rx="27" ry="24" fill="url(#lycheeRindGrad)" stroke="#4C0519" stroke-width="2.8"/>
+            <path d="M 20,54 Q 24,42 32,46 Q 30,58 20,54 Z" fill="#FDA4AF" stroke="#881337" stroke-width="1.5"/>
+            <path d="M 68,54 Q 64,42 56,46 Q 58,58 68,54 Z" fill="#FDA4AF" stroke="#881337" stroke-width="1.5"/>
+            <ellipse cx="44" cy="50" rx="20" ry="19" fill="url(#lycheeFleshGrad)" stroke="#F43F5E" stroke-width="2"/>
+            <ellipse cx="44" cy="36" rx="4.5" ry="2.2" fill="#3E2723"/>
+            <ellipse cx="38" cy="45" rx="5" ry="8" fill="#FFFFFF" opacity="0.9" transform="rotate(-20 38 45)"/>
+            <circle cx="36" cy="56" r="2.5" fill="#FFFFFF" opacity="0.85"/>
+            <circle cx="52" cy="44" r="2" fill="#FFFFFF" opacity="0.8"/>
+          </g>
+        </svg>`
+      },
+      { id: 'longan', name_ms: 'Longan', name_en: 'Longan', color: '#BCAAA4',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+          <circle cx="50" cy="54" r="28" fill="#BCAAA4" stroke="#6D4C41" stroke-width="4"/>
+          <ellipse cx="38" cy="44" rx="4" ry="7" fill="#EFEBE9"/>
+          <path d="M 50,26 L 50,18" stroke="#4E342E" stroke-width="4" stroke-linecap="round"/>
+        </svg>`
+      }
+    ];
+
+    function renderMascotSvg(mood = 'idle') {
+      let eyeLeft = `<circle cx="38" cy="48" r="6" fill="#3D1D00"/><circle cx="40" cy="45" r="2" fill="#FFF"/>`;
+      let eyeRight = `<circle cx="62" cy="48" r="6" fill="#3D1D00"/><circle cx="64" cy="45" r="2" fill="#FFF"/>`;
+      let mouth = `<path d="M 44,58 Q 50,67 56,58" fill="none" stroke="#3D1D00" stroke-width="4" stroke-linecap="round"/>`;
+      let arms = `
+        <ellipse cx="20" cy="62" rx="8" ry="12" fill="#FFAECF" stroke="#E65895" stroke-width="3" transform="rotate(15 20 62)"/>
+        <ellipse cx="80" cy="62" rx="8" ry="12" fill="#FFAECF" stroke="#E65895" stroke-width="3" transform="rotate(-15 80 62)"/>
+      `;
+      let bounceClass = 'anim-float';
+
+      if (mood === 'thinking') {
+        eyeLeft = `<circle cx="38" cy="44" r="6" fill="#3D1D00"/><circle cx="40" cy="41" r="2" fill="#FFF"/>`;
+        eyeRight = `<circle cx="62" cy="44" r="6" fill="#3D1D00"/><circle cx="64" cy="41" r="2" fill="#FFF"/>`;
+        mouth = `<ellipse cx="50" cy="60" rx="4" ry="5" fill="#3D1D00"/>`;
+        arms = `
+          <ellipse cx="24" cy="54" rx="8" ry="11" fill="#FFAECF" stroke="#E65895" stroke-width="3" transform="rotate(-30 24 54)"/>
+          <ellipse cx="76" cy="54" rx="8" ry="11" fill="#FFAECF" stroke="#E65895" stroke-width="3" transform="rotate(30 76 54)"/>
+        `;
+      } else if (mood === 'happy') {
+        eyeLeft = `<path d="M 33,48 Q 40,40 45,48" stroke="#3D1D00" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+        eyeRight = `<path d="M 55,48 Q 60,40 67,48" stroke="#3D1D00" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+        mouth = `<path d="M 40,56 Q 50,74 60,56 Z" fill="#FF1E6D" stroke="#3D1D00" stroke-width="3"/>`;
+        arms = `
+          <ellipse cx="16" cy="44" rx="9" ry="13" fill="#FFAECF" stroke="#E65895" stroke-width="3" transform="rotate(-50 16 44)"/>
+          <ellipse cx="84" cy="44" rx="9" ry="13" fill="#FFAECF" stroke="#E65895" stroke-width="3" transform="rotate(50 84 44)"/>
+        `;
+        bounceClass = 'anim-victory';
+      } else if (mood === 'mistake') {
+        eyeLeft = `<line x1="33" y1="44" x2="43" y2="52" stroke="#3D1D00" stroke-width="4" stroke-linecap="round"/><line x1="43" y1="44" x2="33" y2="52" stroke="#3D1D00" stroke-width="4" stroke-linecap="round"/>`;
+        eyeRight = `<line x1="57" y1="44" x2="67" y2="52" stroke="#3D1D00" stroke-width="4" stroke-linecap="round"/><line x1="67" y1="44" x2="57" y2="52" stroke="#3D1D00" stroke-width="4" stroke-linecap="round"/>`;
+        mouth = `<path d="M 44,63 Q 50,57 56,63" fill="none" stroke="#3D1D00" stroke-width="4" stroke-linecap="round"/>`;
+        bounceClass = 'anim-wrong';
+      }
+
+      return `
+        <svg viewBox="0 0 100 100" class="w-full h-full ${bounceClass}">
+          <ellipse cx="50" cy="24" rx="30" ry="14" fill="#884C1C" stroke="#522908" stroke-width="3"/>
+          <path d="M 50,10 L 50,18" stroke="#522908" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="50" cy="9" r="3.5" fill="#FFE500"/>
+          
+          <circle cx="50" cy="54" r="32" fill="#FFC8DC" stroke="#E65895" stroke-width="4"/>
+          <circle cx="28" cy="54" r="7" fill="#FF337A" opacity="0.6"/>
+          <circle cx="72" cy="54" r="7" fill="#FF337A" opacity="0.6"/>
+          
+          ${eyeLeft}
+          ${eyeRight}
+          ${mouth}
+          ${arms}
+
+          <ellipse cx="38" cy="85" rx="8" ry="6" fill="#FFAECF" stroke="#E65895" stroke-width="3"/>
+          <ellipse cx="62" cy="85" rx="8" ry="6" fill="#FFAECF" stroke="#E65895" stroke-width="3"/>
+        </svg>
+      `;
+    }
+
+    class ToyAudioEngine {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playPop() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(420, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(780, this.ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.28, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.13);
+        } catch(e) {}
+      }
+      playCorrect() {
+        try {
+          this.init();
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+            gain.gain.setValueAtTime(0.24, this.ctx.currentTime + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.25);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + idx * 0.08);
+            osc.stop(this.ctx.currentTime + idx * 0.08 + 0.28);
+          });
+        } catch(e) {}
+      }
+      playGentleMistake() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(220, this.ctx.currentTime + 0.22);
+          gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.23);
+        } catch(e) {}
+      }
+    }
+    const sound = new ToyAudioEngine();
+
+    let svgUidCounter = 0;
+    function getFruitSvg(fruit) {
+      if (!fruit || !fruit.svg) return '';
+      const uid = 'f' + (++svgUidCounter) + '_';
+      return fruit.svg
+        .replace(/\bid="([^"]+)"/g, `id="${uid}$1"`)
+        .replace(/url\(#([^)]+)\)/g, `url(#${uid}$1)`);
+    }
+
+    function speakText(text) {
+      if (!state.voiceEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = state.lang === 'ms' ? 'ms-MY' : 'en-US';
+      utterance.rate = 0.9;
+      utterance.pitch = 1.25;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function loadProfileData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.profile = { ...state.profile, ...parsed };
+        }
+      } catch (e) {
+        console.error('LocalStorage load failed', e);
+      }
+      renderProfileStats();
+    }
+
+    function saveProfileData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.profile));
+      } catch (e) {
+        console.error('LocalStorage save failed', e);
+      }
+      renderProfileStats();
+    }
+
+    function recordGameHistory(score, totalQuestions, diff) {
+      const accuracy = totalQuestions > 0 ? Math.round((state.correctAnswers / totalQuestions) * 100) : 100;
+      
+      state.profile.gamesPlayed += 1;
+      state.profile.questionsAnswered += totalQuestions;
+      state.profile.correctAnswers += state.correctAnswers;
+      if (score > state.profile.bestScore) {
+        state.profile.bestScore = score;
+      }
+
+      const record = {
+        date: new Date().toLocaleDateString(state.lang === 'ms' ? 'ms-MY' : 'en-GB'),
+        game: state.lang === 'ms' ? 'Ingat Buah' : 'Fruit Memory Adventure',
+        difficulty: diff,
+        questions: totalQuestions,
+        correct: state.correctAnswers,
+        score: score,
+        accuracy: accuracy + '%'
+      };
+
+      state.profile.history.unshift(record);
+      if (state.profile.history.length > 20) {
+        state.profile.history.pop();
+      }
+      saveProfileData();
+    }
+
+    function renderProfileStats() {
+      document.getElementById('input-player-name').value = state.profile.playerName || '';
+      document.getElementById('input-family-code').value = state.profile.familyCode || '';
+
+      document.getElementById('stat-prof-games').innerText = state.profile.gamesPlayed;
+      document.getElementById('stat-prof-questions').innerText = state.profile.questionsAnswered;
+      document.getElementById('stat-prof-correct').innerText = state.profile.correctAnswers;
+      
+      const acc = state.profile.questionsAnswered > 0 
+        ? Math.round((state.profile.correctAnswers / state.profile.questionsAnswered) * 100) 
+        : 0;
+      document.getElementById('stat-prof-acc').innerText = acc + '%';
+
+      const logContainer = document.getElementById('history-log-list');
+      if (!state.profile.history || state.profile.history.length === 0) {
+        logContainer.innerHTML = `<p class="text-center py-4 text-amber-600 italic">${i18n[state.lang].emptyHistory}</p>`;
+      } else {
+        logContainer.innerHTML = state.profile.history.map(item => `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-amber-100/70 border border-amber-300">
+            <div>
+              <span class="font-extrabold text-amber-950">${item.date}</span>
+              <span class="text-[10px] text-amber-800 ml-1.5">(${item.difficulty.toUpperCase()})</span>
+            </div>
+            <div class="font-black text-pink-600">
+              ${item.correct}/${item.questions} (${item.accuracy})
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function generateTask(diff) {
+      const targetCount = diff === 'easy' ? 1 : (diff === 'medium' ? 2 : 3);
+      const shuffledFruitPool = shuffleArray(FRUIT_REGISTRY);
+      const targetFruits = shuffledFruitPool.slice(0, targetCount);
+      
+      // Bilangan pengganggu mengikut tahap
+      const distractorCount = diff === 'easy' ? 2 : (diff === 'medium' ? 3 : 3);
+      const distractorFruits = shuffledFruitPool.slice(targetCount, targetCount + distractorCount);
+      
+      // Pastikan SEMUA buah sasaran ada dalam pilihan jawapan
+      const choices = shuffleArray([...targetFruits, ...distractorFruits]);
+
+      let variation = 'main';
+      const rand = Math.random();
+      
+      // HANYA tahap MUDAH (1 buah) dibenarkan ada variasi sambung garisan (drag)
+      if (diff === 'easy' && rand < 0.25) {
+        variation = 'drag';
+      } else if (rand < 0.5) {
+        variation = 'which';
+      }
+
+      return {
+        targets: targetFruits,
+        choices: choices,
+        variation: variation,
+        diff: diff,
+        completed: false
+      };
+    }
+
+    let lookTimer = null;
+
+    function startActiveSession(questions, diff) {
+      sound.init();
+      clearDragLines();
+      state.sessionTotalQuestions = questions;
+      state.difficulty = diff;
+      state.questionIndex = 0;
+      state.score = 0;
+      state.correctAnswers = 0;
+      state.questionsAnswered = 0;
+      state.sessionTasksHistory = [];
+
+      switchView('game');
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      if (lookTimer) clearInterval(lookTimer);
+      clearDragLines();
+
+      if (state.sessionTotalQuestions > 0 && state.questionIndex >= state.sessionTotalQuestions) {
+        showResults();
+        return;
+      }
+
+      state.questionIndex += 1;
+      state.selectedAnswers = [];
+      updateHud();
+
+      state.activeTask = generateTask(state.difficulty);
+      presentLookStage();
+    }
+
+    function updateHud() {
+      const diffEl = document.getElementById('game-hud-diff');
+      const progEl = document.getElementById('game-hud-progress');
+      const scoreEl = document.getElementById('game-hud-score');
+
+      const diffLabel = state.difficulty === 'easy' ? i18n[state.lang].easyTitle :
+                        (state.difficulty === 'medium' ? i18n[state.lang].medTitle : i18n[state.lang].proTitle);
+      
+      diffEl.innerText = diffLabel;
+      diffEl.className = state.difficulty === 'easy' ? 'px-3 py-0.5 bg-emerald-500 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-sm' :
+                         (state.difficulty === 'medium' ? 'px-3 py-0.5 bg-amber-500 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-sm' :
+                         'px-3 py-0.5 bg-purple-600 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-sm');
+
+      if (state.sessionTotalQuestions === 0) {
+        progEl.innerText = `${i18n[state.lang].freeModeBadge} #${state.questionIndex}`;
+      } else {
+        progEl.innerText = `${state.questionIndex} / ${state.sessionTotalQuestions}`;
+      }
+
+      scoreEl.innerText = state.score;
+    }
+
+    function setInstruction(text, iconPulse = true) {
+      document.getElementById('instruction-text').innerText = text;
+      const icon = document.getElementById('instruction-icon');
+      if (iconPulse) {
+        icon.className = 'w-3.5 h-3.5 rounded-full bg-pink-500 animate-pulse';
+      } else {
+        icon.className = 'w-3.5 h-3.5 rounded-full bg-emerald-500';
+      }
+    }
+
+    function setMascotReaction(mood, speech) {
+      document.getElementById('mascot-mini-anchor').innerHTML = renderMascotSvg(mood);
+      document.getElementById('mascot-mini-speech').innerText = speech;
+    }
+
+    function presentLookStage() {
+      document.getElementById('find-choices-grid').innerHTML = '';
+      document.getElementById('answer-tray-slots').innerHTML = '';
+      document.getElementById('drag-target-column').innerHTML = '';
+
+      document.getElementById('stage-look').classList.remove('hidden');
+      document.getElementById('stage-hide').classList.add('hidden');
+      document.getElementById('stage-find').classList.add('hidden');
+      document.getElementById('stage-drag').classList.add('hidden');
+
+      setInstruction(i18n[state.lang].instructionLook);
+      setMascotReaction('thinking', i18n[state.lang].mascotThinking);
+      speakText(i18n[state.lang].instructionLook);
+
+      const targetBox = document.getElementById('target-fruits-box');
+      targetBox.innerHTML = state.activeTask.targets.map(fruit => `
+        <div class="flex flex-col items-center anim-pop-in">
+          <div class="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-3xl p-3 border-4 border-amber-300 shadow-toy flex items-center justify-center">
+            ${getFruitSvg(fruit)}
+          </div>
+          <span class="mt-2 text-sm sm:text-base font-extrabold text-amber-950">${state.lang === 'ms' ? fruit.name_ms : fruit.name_en}</span>
+        </div>
+      `).join('');
+
+      const timerBar = document.getElementById('remember-timer-bar');
+      timerBar.style.width = '100%';
+
+      let duration = state.difficulty === 'easy' ? 3200 : (state.difficulty === 'medium' ? 4200 : 5000);
+      let startTime = Date.now();
+
+      lookTimer = setInterval(() => {
+        let elapsed = Date.now() - startTime;
+        let remainingRatio = Math.max(0, 1 - (elapsed / duration));
+        timerBar.style.width = (remainingRatio * 100) + '%';
+
+        if (elapsed >= duration) {
+          clearInterval(lookTimer);
+          presentHideStage();
+        }
+      }, 50);
+    }
+
+    function presentHideStage() {
+      sound.playPop();
+      document.getElementById('stage-look').classList.add('hidden');
+      document.getElementById('target-fruits-box').innerHTML = '';
+      document.getElementById('stage-hide').classList.remove('hidden');
+
+      setInstruction(i18n[state.lang].instructionHiding);
+      document.getElementById('txt-hiding-message').innerText = i18n[state.lang].instructionHiding;
+      document.getElementById('txt-hiding-sub').innerText = i18n[state.lang].hidingSub;
+
+      setTimeout(() => {
+        document.getElementById('stage-hide').classList.add('hidden');
+        if (state.activeTask.variation === 'drag') {
+          presentDragStage();
+        } else {
+          presentFindStage();
+        }
+      }, 1150);
+    }
+
+    function presentFindStage() {
+      document.getElementById('stage-find').classList.remove('hidden');
+      
+      let promptText = '';
+      if (state.activeTask.variation === 'which') {
+        promptText = state.activeTask.targets.length === 1 
+          ? i18n[state.lang].instructionWhichOne 
+          : i18n[state.lang].instructionWhichMulti;
+      } else {
+        promptText = state.activeTask.targets.length === 1 
+          ? i18n[state.lang].instructionFindOne 
+          : i18n[state.lang].instructionWhichMulti;
+      }
+
+      setInstruction(promptText);
+      speakText(promptText);
+
+      const trayContainer = document.getElementById('answer-tray-container');
+      
+      if (state.activeTask.targets.length > 1) {
+        trayContainer.classList.remove('hidden');
+        renderTraySlots();
+      } else {
+        trayContainer.classList.add('hidden');
+      }
+
+      const grid = document.getElementById('find-choices-grid');
+      if (state.activeTask.choices.length > 3) {
+        grid.className = 'w-full grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 px-2';
+      } else {
+        grid.className = 'w-full grid grid-cols-3 gap-3 sm:gap-4 px-2';
+      }
+
+      grid.innerHTML = state.activeTask.choices.map((fruit, idx) => `
+        <button class="toy-btn choice-fruit-card puffy-card p-3 sm:p-4 flex flex-col items-center justify-center bg-white/95 border-3 border-cyan-400 hover:border-pink-500 shadow-toy" data-fruit-id="${fruit.id}" aria-label="${state.lang === 'ms' ? fruit.name_ms : fruit.name_en}">
+          <div class="w-18 h-18 sm:w-24 sm:h-24 flex items-center justify-center pointer-events-none">
+            ${getFruitSvg(fruit)}
+          </div>
+          <span class="mt-2 text-xs sm:text-sm font-extrabold text-amber-950 pointer-events-none">
+            ${state.lang === 'ms' ? fruit.name_ms : fruit.name_en}
+          </span>
+        </button>
+      `).join('');
+
+      grid.querySelectorAll('.choice-fruit-card').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          handleFruitChoice(btn.dataset.fruitId, btn);
+        });
+      });
+    }
+
+    function renderTraySlots() {
+      const traySlots = document.getElementById('answer-tray-slots');
+      const targetCount = state.activeTask.targets.length;
+      let slotsHtml = '';
+
+      for (let i = 0; i < targetCount; i++) {
+        const pickedFruit = state.selectedAnswers[i];
+        if (pickedFruit) {
+          slotsHtml += `
+            <div class="w-10 h-10 rounded-xl bg-pink-100 border-2 border-pink-400 p-1 flex items-center justify-center anim-pop-in">
+              ${getFruitSvg(pickedFruit)}
+            </div>
+          `;
+        } else {
+          slotsHtml += `
+            <div class="w-10 h-10 rounded-xl bg-amber-100/70 border-2 border-dashed border-amber-300 flex items-center justify-center text-amber-400 font-bold text-xs">
+              ?
+            </div>
+          `;
+        }
+      }
+      traySlots.innerHTML = slotsHtml;
+    }
+
+    function handleFruitChoice(fruitId, buttonEl) {
+      if (state.activeTask.completed) return;
+
+      const fruitObj = FRUIT_REGISTRY.find(f => f.id === fruitId);
+      const isTarget = state.activeTask.targets.some(t => t.id === fruitId);
+
+      if (isTarget) {
+        if (state.selectedAnswers.some(a => a.id === fruitId)) return;
+
+        sound.playPop();
+        buttonEl.classList.add('border-emerald-500', 'bg-emerald-50', 'shadow-glow-yellow');
+        buttonEl.style.transform = 'scale(0.96)';
+        state.selectedAnswers.push(fruitObj);
+
+        if (state.activeTask.targets.length > 1) {
+          renderTraySlots();
+        }
+
+        if (state.selectedAnswers.length === state.activeTask.targets.length) {
+          state.activeTask.completed = true;
+          handleCorrectAnswer();
+        }
+      } else {
+        handleWrongAnswer(buttonEl);
+      }
+    }
+
+    function presentDragStage() {
+      document.getElementById('stage-drag').classList.remove('hidden');
+      
+      const promptText = i18n[state.lang].instructionFindOne;
+      setInstruction(promptText);
+      speakText(promptText);
+
+      const targetFruit = state.activeTask.targets[0];
+      
+      const sourceNode = document.getElementById('drag-source-node');
+      sourceNode.dataset.fruitId = targetFruit.id;
+      
+      document.getElementById('txt-drag-left-lbl').innerText = i18n[state.lang].dragLeftPrompt;
+      document.getElementById('lbl-drag-source-sub').innerText = i18n[state.lang].dragLeftSub;
+
+      const targetColumn = document.getElementById('drag-target-column');
+      targetColumn.innerHTML = state.activeTask.choices.map(fruit => `
+        <div class="drag-target-item toy-btn w-full px-3 py-2 puffy-card bg-white border-3 border-amber-300 flex items-center gap-3 cursor-pointer shadow-toy-sm" data-fruit-id="${fruit.id}">
+          <div class="w-12 h-12 pointer-events-none">${getFruitSvg(fruit)}</div>
+          <span class="text-xs sm:text-sm font-black text-amber-950 pointer-events-none">${state.lang === 'ms' ? fruit.name_ms : fruit.name_en}</span>
+        </div>
+      `).join('');
+
+      setupDragEvents(sourceNode, targetFruit.id);
+    }
+
+    function setupDragEvents(sourceEl, correctFruitId) {
+      const activeLine = document.getElementById('active-drag-line');
+      const permLine = document.getElementById('permanent-drag-line');
+      activeLine.setAttribute('d', '');
+      permLine.setAttribute('d', '');
+
+      function getCenter(el) {
+        const rect = el.getBoundingClientRect();
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
+      }
+
+      function onPointerDown(e) {
+        if (state.activeTask.completed) return;
+        state.isDragging = true;
+        const center = getCenter(sourceEl);
+        state.dragStartPoint = center;
+        activeLine.setAttribute('d', `M ${center.x},${center.y} L ${e.clientX},${e.clientY}`);
+        sourceEl.setPointerCapture(e.pointerId);
+      }
+
+      function onPointerMove(e) {
+        if (!state.isDragging) return;
+        activeLine.setAttribute('d', `M ${state.dragStartPoint.x},${state.dragStartPoint.y} L ${e.clientX},${e.clientY}`);
+      }
+
+      function onPointerUp(e) {
+        if (!state.isDragging) return;
+        state.isDragging = false;
+        activeLine.setAttribute('d', '');
+
+        const elemUnder = document.elementFromPoint(e.clientX, e.clientY);
+        const targetCard = elemUnder ? elemUnder.closest('.drag-target-item') : null;
+
+        if (targetCard) {
+          evaluateDragTarget(targetCard, correctFruitId, sourceEl);
+        }
+      }
+
+      sourceEl.onpointerdown = onPointerDown;
+      sourceEl.onpointermove = onPointerMove;
+      sourceEl.onpointerup = onPointerUp;
+      sourceEl.onpointercancel = onPointerUp;
+
+      document.querySelectorAll('.drag-target-item').forEach(card => {
+        card.onclick = () => {
+          if (state.activeTask.completed) return;
+          evaluateDragTarget(card, correctFruitId, sourceEl);
+        };
+      });
+    }
+
+    function evaluateDragTarget(targetCard, correctFruitId, sourceEl) {
+      const chosenId = targetCard.dataset.fruitId;
+      const permLine = document.getElementById('permanent-drag-line');
+      
+      const rectA = sourceEl.getBoundingClientRect();
+      const rectB = targetCard.getBoundingClientRect();
+      const ptA = { x: rectA.left + rectA.width / 2, y: rectA.top + rectA.height / 2 };
+      const ptB = { x: rectB.left + rectB.width / 2, y: rectB.top + rectB.height / 2 };
+
+      if (chosenId === correctFruitId) {
+        state.activeTask.completed = true;
+        permLine.setAttribute('d', `M ${ptA.x},${ptA.y} L ${ptB.x},${ptB.y}`);
+        targetCard.classList.add('border-emerald-500', 'bg-emerald-50', 'shadow-glow-yellow');
+        handleCorrectAnswer();
+      } else {
+        clearDragLines();
+        handleWrongAnswer(targetCard);
+      }
+    }
+
+    function clearDragLines() {
+      const activeLine = document.getElementById('active-drag-line');
+      const permLine = document.getElementById('permanent-drag-line');
+      if (activeLine) activeLine.setAttribute('d', '');
+      if (permLine) permLine.setAttribute('d', '');
+      state.isDragging = false;
+    }
+
+    function handleCorrectAnswer() {
+      sound.playCorrect();
+      state.score += 1;
+      state.correctAnswers += 1;
+      state.questionsAnswered += 1;
+      updateHud();
+
+      setMascotReaction('happy', i18n[state.lang].mascotCheer);
+      setInstruction(i18n[state.lang].mascotCheer, false);
+
+      setTimeout(() => {
+        clearDragLines();
+        nextQuestion();
+      }, 1300);
+    }
+
+    function handleWrongAnswer(element) {
+      sound.playGentleMistake();
+      state.questionsAnswered += 1;
+
+      if (element) {
+        element.classList.add('anim-wrong');
+        setTimeout(() => element.classList.remove('anim-wrong'), 600);
+      }
+
+      setMascotReaction('mistake', i18n[state.lang].mascotTryAgain);
+      setInstruction(i18n[state.lang].mascotTryAgain);
+
+      setTimeout(() => {
+        clearDragLines();
+        nextQuestion();
+      }, 1400);
+    }
+
+    function showResults() {
+      clearDragLines();
+      switchView('result');
+      sound.playCorrect();
+
+      const total = state.sessionTotalQuestions > 0 ? state.sessionTotalQuestions : state.questionsAnswered;
+      const acc = total > 0 ? Math.round((state.correctAnswers / total) * 100) : 100;
+
+      document.getElementById('val-res-score').innerText = state.score;
+      document.getElementById('val-res-correct').innerText = `${state.correctAnswers} / ${total}`;
+      document.getElementById('val-res-acc').innerText = `${acc}%`;
+
+      document.getElementById('mascot-result-wrap').innerHTML = renderMascotSvg('happy');
+
+      recordGameHistory(state.score, total, state.difficulty);
+    }
+
+    function renderCollection() {
+      const container = document.getElementById('collection-grid');
+      container.innerHTML = FRUIT_REGISTRY.map(fruit => `
+        <div class="puffy-card bg-white p-3 flex flex-col items-center justify-between border-3 border-amber-300 shadow-toy-sm hover:scale-105 transition-transform cursor-pointer" onclick="speakFruit('${fruit.id}')">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+            ${getFruitSvg(fruit)}
+          </div>
+          <div class="text-center mt-2 w-full">
+            <span class="block text-xs sm:text-sm font-extrabold text-amber-950 truncate">${state.lang === 'ms' ? fruit.name_ms : fruit.name_en}</span>
+            <span class="block text-[10px] font-bold text-amber-600 truncate">${state.lang === 'ms' ? fruit.name_en : fruit.name_ms}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.speakFruit = function(fruitId) {
+      const fruit = FRUIT_REGISTRY.find(f => f.id === fruitId);
+      if (fruit) {
+        sound.playPop();
+        speakText(state.lang === 'ms' ? fruit.name_ms : fruit.name_en);
+      }
+    };
+
+    function switchView(viewName) {
+      clearDragLines();
+      state.currentView = viewName;
+
+      const dragOverlay = document.getElementById('drag-overlay');
+      if (dragOverlay) {
+        dragOverlay.style.display = (viewName === 'game') ? 'block' : 'none';
+      }
+
+      const screens = ['home', 'setup', 'game', 'result', 'how', 'collection', 'profile'];
+      screens.forEach(s => {
+        const el = document.getElementById(`screen-${s}`);
+        if (el) el.classList.add('hidden');
+      });
+
+      const activeEl = document.getElementById(`screen-${viewName}`);
+      if (activeEl) activeEl.classList.remove('hidden');
+
+      const backBtn = document.getElementById('btn-header-back');
+      if (viewName === 'home') {
+        backBtn.classList.add('hidden');
+      } else {
+        backBtn.classList.remove('hidden');
+      }
+
+      if (viewName === 'home') {
+        document.getElementById('mascot-home-wrap').innerHTML = renderMascotSvg('idle');
+      } else if (viewName === 'collection') {
+        renderCollection();
+      } else if (viewName === 'profile') {
+        renderProfileStats();
+      }
+    }
+
+    function applyLocalization() {
+      const dict = i18n[state.lang];
+
+      document.title = `${dict.appTitle} | Kinder Klub`;
+      document.getElementById('app-heading').innerText = dict.appTitle;
+      document.getElementById('home-title').innerText = dict.appTitle;
+      document.getElementById('home-subtitle').innerText = dict.homeSubtitle;
+
+      document.getElementById('lbl-nav-play').innerText = dict.btnPlay;
+      document.getElementById('lbl-nav-how').innerText = dict.btnHow;
+      document.getElementById('lbl-nav-collection').innerText = dict.btnCollection;
+      document.getElementById('lbl-nav-profile').innerText = dict.btnProfile;
+      document.getElementById('txt-header-back').innerText = dict.btnMenu;
+
+      document.getElementById('lbl-choose-session').innerText = dict.chooseSession;
+      document.querySelectorAll('.txt-q-unit').forEach(el => el.innerText = dict.qUnit);
+      document.getElementById('lbl-free-play').innerText = dict.freePlay;
+      document.getElementById('lbl-choose-diff').innerText = dict.chooseDiff;
+
+      document.getElementById('diff-opt-easy-title').innerText = dict.easyTitle;
+      document.getElementById('diff-opt-easy-sub').innerText = dict.easySub;
+      document.getElementById('diff-opt-med-title').innerText = dict.medTitle;
+      document.getElementById('diff-opt-med-sub').innerText = dict.medSub;
+      document.getElementById('diff-opt-pro-title').innerText = dict.proTitle;
+      document.getElementById('diff-opt-pro-sub').innerText = dict.proSub;
+      document.getElementById('lbl-cancel').innerText = dict.cancel;
+
+      document.getElementById('res-heading').innerText = dict.resHeading;
+      document.getElementById('res-subheading').innerText = dict.resSub;
+      document.getElementById('lbl-res-score').innerText = dict.score;
+      document.getElementById('lbl-res-correct').innerText = dict.correct;
+      document.getElementById('lbl-res-acc').innerText = dict.accuracy;
+      document.getElementById('lbl-res-playagain').innerText = dict.playAgain;
+      document.getElementById('lbl-res-menu').innerText = dict.backToMenu;
+
+      document.getElementById('lbl-how-title').innerText = dict.howTitle;
+      document.getElementById('lbl-how-desc').innerText = dict.howDesc;
+      document.getElementById('how-step1-lbl').innerText = dict.howStep1;
+      document.getElementById('how-step2-lbl').innerText = dict.howStep2;
+      document.getElementById('how-step3-lbl').innerText = dict.howStep3;
+      document.getElementById('how-reminder').innerText = dict.howReminder;
+      document.getElementById('lbl-how-ok').innerText = dict.howOk;
+
+      document.getElementById('lbl-collection-title').innerText = dict.collectionTitle;
+      document.getElementById('lbl-collection-sub').innerText = dict.collectionSub;
+      document.getElementById('lbl-collection-back').innerText = dict.close;
+
+      document.getElementById('lbl-profile-title').innerText = dict.profileTitle;
+      document.getElementById('lbl-profile-back').innerText = dict.close;
+      document.getElementById('lbl-player-name').innerText = dict.playerName;
+      document.getElementById('lbl-family-code').innerText = dict.familyCode;
+      document.getElementById('lbl-save-profile').innerText = dict.saveProfile;
+      document.getElementById('lbl-prof-games').innerText = dict.gamesPlayed;
+      document.getElementById('lbl-prof-questions').innerText = dict.questions;
+      document.getElementById('lbl-prof-correct').innerText = dict.correct;
+      document.getElementById('lbl-prof-acc').innerText = dict.accuracy;
+      document.getElementById('lbl-history-title').innerText = dict.historyTitle;
+
+      document.getElementById('voice-indicator-txt').innerText = state.voiceEnabled ? dict.voiceOn : dict.voiceOff;
+
+      if (state.currentView === 'collection') renderCollection();
+      if (state.currentView === 'profile') renderProfileStats();
+      if (state.currentView === 'game') updateHud();
+    }
+
+    function initializePreviews() {
+      document.getElementById('preview-easy-fruit').innerHTML = getFruitSvg(FRUIT_REGISTRY[0]);
+      document.getElementById('preview-med-fruits').innerHTML = `
+        <div class="w-8 h-8">${getFruitSvg(FRUIT_REGISTRY[0])}</div>
+        <div class="w-8 h-8">${getFruitSvg(FRUIT_REGISTRY[1])}</div>
+      `;
+      document.getElementById('preview-pro-fruits').innerHTML = `
+        <div class="w-7 h-7">${getFruitSvg(FRUIT_REGISTRY[0])}</div>
+        <div class="w-7 h-7">${getFruitSvg(FRUIT_REGISTRY[1])}</div>
+        <div class="w-7 h-7">${getFruitSvg(FRUIT_REGISTRY[3])}</div>
+      `;
+
+      document.getElementById('how-step1-icon').innerHTML = getFruitSvg(FRUIT_REGISTRY[0]);
+      document.getElementById('how-step2-icon').innerHTML = `
+        <svg viewBox="0 0 100 100" class="w-8 h-8"><ellipse cx="50" cy="50" rx="35" ry="25" fill="#FFA500"/></svg>
+      `;
+      document.getElementById('how-step3-icon').innerHTML = getFruitSvg(FRUIT_REGISTRY[0]);
+    }
+
+    function bindEvents() {
+      document.getElementById('btn-lang-ms').onclick = () => {
+        sound.playPop();
+        state.lang = 'ms';
+        document.getElementById('btn-lang-ms').className = 'px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-extrabold rounded-xl transition-colors bg-pink-500 text-white shadow-sm';
+        document.getElementById('btn-lang-en').className = 'px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-extrabold rounded-xl transition-colors text-amber-900 hover:bg-amber-100';
+        applyLocalization();
+      };
+      document.getElementById('btn-lang-en').onclick = () => {
+        sound.playPop();
+        state.lang = 'en';
+        document.getElementById('btn-lang-en').className = 'px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-extrabold rounded-xl transition-colors bg-pink-500 text-white shadow-sm';
+        document.getElementById('btn-lang-ms').className = 'px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-extrabold rounded-xl transition-colors text-amber-900 hover:bg-amber-100';
+        applyLocalization();
+      };
+
+      document.getElementById('btn-toggle-voice').onclick = () => {
+        sound.playPop();
+        state.voiceEnabled = !state.voiceEnabled;
+        applyLocalization();
+      };
+
+      document.getElementById('btn-header-back').onclick = () => {
+        sound.playPop();
+        if (lookTimer) clearInterval(lookTimer);
+        switchView('home');
+      };
+
+      document.getElementById('btn-nav-play').onclick = () => {
+        sound.playPop();
+        switchView('setup');
+      };
+      document.getElementById('btn-nav-how').onclick = () => {
+        sound.playPop();
+        switchView('how');
+      };
+      document.getElementById('btn-nav-collection').onclick = () => {
+        sound.playPop();
+        switchView('collection');
+      };
+      document.getElementById('btn-nav-profile').onclick = () => {
+        sound.playPop();
+        switchView('profile');
+      };
+
+      let selectedQuestions = 5;
+      document.querySelectorAll('.btn-session-choice').forEach(btn => {
+        btn.onclick = () => {
+          sound.playPop();
+          document.querySelectorAll('.btn-session-choice').forEach(b => {
+            b.classList.remove('bg-pink-500', 'text-white', 'border-pink-700');
+          });
+          btn.classList.add('bg-pink-500', 'text-white', 'border-pink-700');
+          selectedQuestions = parseInt(btn.dataset.questions, 10);
+        };
+      });
+
+      document.querySelectorAll('.btn-diff-choice').forEach(btn => {
+        btn.onclick = () => {
+          const diff = btn.dataset.diff;
+          startActiveSession(selectedQuestions, diff);
+        };
+      });
+
+      document.getElementById('btn-cancel-setup').onclick = () => {
+        sound.playPop();
+        switchView('home');
+      };
+
+      document.getElementById('btn-res-playagain').onclick = () => {
+        sound.playPop();
+        startActiveSession(state.sessionTotalQuestions, state.difficulty);
+      };
+      document.getElementById('btn-res-menu').onclick = () => {
+        sound.playPop();
+        switchView('home');
+      };
+
+      document.getElementById('btn-close-how').onclick = () => {
+        sound.playPop();
+        switchView('home');
+      };
+      document.getElementById('btn-close-collection').onclick = () => {
+        sound.playPop();
+        switchView('home');
+      };
+      document.getElementById('btn-close-profile').onclick = () => {
+        sound.playPop();
+        switchView('home');
+      };
+
+      document.getElementById('btn-save-profile').onclick = () => {
+        sound.playPop();
+        state.profile.playerName = document.getElementById('input-player-name').value.trim();
+        state.profile.familyCode = document.getElementById('input-family-code').value.trim();
+        saveProfileData();
+        const btn = document.getElementById('btn-save-profile');
+        const orig = btn.innerText;
+        btn.innerText = i18n[state.lang].profileSaved;
+        setTimeout(() => btn.innerText = orig, 1500);
+      };
+
+      document.getElementById('mascot-home-wrap').onclick = () => {
+        sound.playPop();
+        document.getElementById('mascot-home-wrap').innerHTML = renderMascotSvg('happy');
+        setTimeout(() => {
+          document.getElementById('mascot-home-wrap').innerHTML = renderMascotSvg('idle');
+        }, 1200);
+      };
+    }
+
+    window.onload = function() {
+      loadProfileData();
+      initializePreviews();
+      bindEvents();
+      applyLocalization();
+      switchView('home');
+    };
+  </script>
+</body>
+</html>
